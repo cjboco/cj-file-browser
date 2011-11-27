@@ -1,0 +1,111 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<!-- ****************************************************************************
+
+	CJ File Browser HTML Layout
+
+	Author: Doug Jones
+	http://www.cjboco.com/
+
+	For further information on this and other projects, please visit the
+	Creative Juices Bo. Co. website at www.cjboco.com.
+
+**************************************************************************** -->
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="cache-control" content="no-cache" />
+<meta http-equiv="pragma" content="no-cache" />
+<meta http-equiv="expires" content="-1" />
+<title>CJ File Browser</title>
+<link rel="shortcut icon" href="assets/images/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="assets/css/cj.file_browser.css" media="all" />
+<link rel="stylesheet" type="text/css" href="assets/css/icons.css" media="all" />
+<link rel="stylesheet" type="text/css" href="assets/css/smoothness/jquery-ui-1.7.2.custom.css" media="all" />
+</head>
+<body>
+
+<div id="CJFileBrowser"></div>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
+<script src="assets/js/date.format.js"></script>
+<script src="assets/js/cj.file_browser.js" content="no-cache"></script>
+<script><!--
+(function ($) {
+	"use strict";
+
+	// grab URL parameters
+	function getUrlParams(key) {
+		var a = [],
+			b = (window.location.href.slice(window.location.href.indexOf('?') + 1)).split('&');
+		if (key) {
+			$.each(b, function (c) {
+				var p = b[c].split('='),
+					d = {};
+				if (p.length === 2) {
+					d[p[0]] = p[1];
+					if (key && key === p[0]) {
+						a = p[1];
+						return false;
+					}
+					a.push(d);
+				}
+			});
+		}
+		return a.length > 0 ? a[1] : undefined;
+	}
+
+	// make sure jQuery and support plug-ins are present
+	if (typeof dateFormat !== "undefined" && $.cjFileBrowser) {
+
+		// We need to determine if we are a tinyMCE plug-in or running in stand-along mode and init accordingly
+		if (parent && parent.tinyMCE) {
+
+			$.getScript('../../tiny_mce_popup.js', function() {
+				tinyMCEPopup.onInit.add($('#CJFileBrowser').cjFileBrowser(), $);
+			});
+
+		} else {
+
+			$('#CJFileBrowser').cjFileBrowser({
+				actions: ["navigateDirectory","createDirectory","deleteDirectory","fileDelete","fileUpload","fileSelect"],
+				baseRelPath: typeof getUrlParams('baseRelPath') !== "undefined" ? [getUrlParams('baseRelPath')] : ["/"],
+				baseAbsPath: [],
+				fileExts: getUrlParams('fileExts') || "*",
+				maxSize: parseInt(getUrlParams('maxSize'), 10) || 1500,
+				maxWidth: parseInt(getUrlParams('maxWidth'), 10) || 600,
+				maxHeight: parseInt(getUrlParams('maxHeight'), 10) || 800,
+				showImgPreview: getUrlParams('showImgPreview') !== "undefined" ? Boolean(getUrlParams('showImgPreview')): true,
+				engine: "coldfusion8",
+				handler: "handler.cfc",
+				timeOut: 900, // 15 minutes
+				callBack: function(fileObj) {
+					if (typeof fileObj === "object") {
+						if (typeof parent.fileSelectCallback === "function") {
+							parent.fileSelectCallback(fileObj.DIRECTORY + fileObj.NAME);
+						} else {
+							throw("CJ File Browser was not setup properly. Missing fileSelectCallback function.");
+						}
+					} else {
+						throw("Problems reading file selction object.");
+					}
+				}
+			});
+
+		}
+
+	} else {
+
+		// jQuery wasn't included while loading the HTML page.
+		throw("You must have jQuery and all the required plugins installed in order to use CJ File Browser.");
+
+	}
+
+}(jQuery));
+//-->
+</script>
+
+</body>
+</html>

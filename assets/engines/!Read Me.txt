@@ -1,0 +1,28 @@
+Create Your Own Handler Engine for CJ File Browser
+
+One of the main features of CJ File Browser is the capability to use various
+server technologies besides ColdFusion, to handle all the server calls. In order
+to do this, you may need to create your own plug-in for the new Handler Engine
+System. This guide will provide you with the layout, required functions and
+function responses that are needed in order to do this.
+
+Unfortunately, in order for you to create your own Handler Engine plug-in, you
+are going to need at least some basic knowledge of programming language. There's
+just to much going on on the functions to effectively explain it all here. You
+are going to need to be able to open up one of the existing handler engine
+plug-ins to get a grasp of what it's doing. If any of this is not making sense,
+then don't hesitate to ask a question. I'm more than happy to provide any
+insight into making these!
+
+The Handler Engine System
+
+The handler engine is just a collection of functions that
+handle various aspects of CJ File Browser. It handles things like, reading a
+directory, uploading a file and grabbing image file thumbnails from the server.
+For ColdFusion, these functions are located in a ColdFusion Component File
+(CFC). CJ File Browser uses jQuery to make calls to this file using AJAX. The
+handler returns it's results as a JSON object, which is used to handle the
+various user actions.
+
+For further information, or to learn how to make your own handler engine
+plug-in, please visit www.cjboco.com.

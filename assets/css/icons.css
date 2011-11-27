@@ -1,0 +1,147 @@
+@charset "UTF-8";
+
+/* 
+	You can add your own custom icons here.
+	Files are stored in the "assets/icons" folder.
+*/
+
+/*
+	sidebar icons
+**********************************/
+#sidebar ul li[rel="Directory"] {
+	background: url(../icons/icn_folder_16x16.gif) no-repeat 15px 3px;
+}
+
+#sidebar ul li[rel="File"] {
+	background: url(../icons/icn_document_16x16.gif) no-repeat 15px 3px;
+}
+
+/*
+	browser icons
+**********************************/
+#browser ul li[rel="Directory"] .icon {
+	background-image: url(../icons/folder.png);
+}
+
+#browser ul li[rel="File"] .icon {
+	background-image: url(../icons/document.png);
+}
+
+#browser ul li .AI .icon {
+	background-image: url(../icons/document_AI.png);
+}
+
+#browser ul li .BMP .icon {
+	background-image: url(../icons/document_bmp.png);
+}
+
+#browser ul li .CSS .icon {
+	background-image: url(../icons/document_css.png);
+}
+
+#browser ul li .CFC .icon {
+	background-image: url(../icons/document_cfc.png);
+}
+
+#browser ul li .CFM .icon {
+	background-image: url(../icons/document_cfm.png);
+}
+
+#browser ul li .CSV .icon {
+	background-image: url(../icons/document_csv.png);
+}
+
+#browser ul li .DOC .icon {
+	background-image: url(../icons/document_doc.png);
+}
+
+#browser ul li .GIF .icon {
+	background-image: url(../icons/document_gif.png);
+}
+
+#browser ul li .GZIP .icon {
+	background-image: url(../icons/document_gzip.png);
+}
+
+#browser ul li .HTM .icon {
+	background-image: url(../icons/document_htm.png);
+}
+
+#browser ul li .HTML .icon {
+	background-image: url(../icons/document_html.png);
+}
+
+#browser ul li .JPEG .icon {
+	background-image: url(../icons/document_jpeg.png);
+}
+
+#browser ul li .JPG .icon {
+	background-image: url(../icons/document_jpg.png);
+}
+
+#browser ul li .JS .icon {
+	background-image: url(../icons/document_js.png);
+}
+
+#browser ul li .PDF .icon {
+	background-image: url(../icons/document_pdf.png);
+}
+
+#browser ul li .PNG .icon {
+	background-image: url(../icons/document_png.png);
+}
+
+#browser ul li .PPT .icon {
+	background-image: url(../icons/document_ppt.png);
+}
+
+#browser ul li .PSD .icon {
+	background-image: url(../icons/document_psd.png);
+}
+
+#browser ul li .SWF .icon {
+	background-image: url(../icons/document_swf.png);
+}
+
+#browser ul li .TIF .icon,
+#browser ul li .TIFF .icon {
+	background-image: url(../icons/document_tif.png);
+}
+
+#browser ul li .TXT .icon {
+	background-image: url(../icons/document.png);
+}
+
+#browser ul li .XDOC .icon {
+	background-image: url(../icons/document_xdoc.png);
+}
+
+#browser ul li .XLS .icon {
+	background-image: url(../icons/document_xls.png);
+}
+
+#browser ul li .ZIP .icon {
+	background-image: url(../icons/document_zip.png);
+}
+
+/*
+	valid preview icons
+	i.e. images that are
+	viewable in a web browser
+	(gif, jpg, png)
+**********************************/
+#browser ul li.viewable .icon {
+	background: url(../images/bg_document_dots.gif) no-repeat center center;
+}
+
+#browser ul li.viewable .mask {
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: block;
+	width: 120px;
+	height: 120px;
+	background-image: url(../icons/document_mask.png);
+	overflow: hidden;
+	z-index: 1;
+}

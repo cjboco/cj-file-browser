@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cjFileBrowser version="4.0">
+
+	<!-- **********************************************
+		Master list of authorized actions.
+		*Actions not listed are not allowed.
+	********************************************** -->
+	<actionsAllowed>
+		<action>navigateDirectory</action>
+		<action>createDirectory</action>
+		<action>deleteDirectory</action>
+		<action>fileDelete</action>
+		<action>fileUpload</action>
+		<action>filePreviews</action>
+		<action>fileSelect</action>
+	</actionsAllowed>
+
+	<!-- **********************************************
+		Master list of authorized directories.
+		Use "/" to allow all directories
+		*Relative from ROOT (Don't use "../" not sure that will work)
+	********************************************** -->
+	<directoriesAllowed>
+		<directory type="relative">/</directory>
+	</directoriesAllowed>
+
+	<!-- **********************************************
+		Master list of authorized file extensions.
+		A comma seperated list of file extension.
+		Use "*" to allow all file types.
+		i.e. jpg,gif,tiff,tif,png
+	********************************************** -->
+	<fileExtsAllowed>
+		<fileExt>*</fileExt>
+	</fileExtsAllowed>
+
+</cjFileBrowser>
