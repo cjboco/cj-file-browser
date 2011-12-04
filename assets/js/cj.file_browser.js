@@ -860,7 +860,6 @@
 		 * Drag-n-drop, Yo!
 		 */
 		function dragEnter(e) {
-			console.log(e);
 			var $trg = $(e.target);
 			$trg.addClass('drop_hover');
 			e.stopPropagation();
@@ -941,7 +940,7 @@
 						// do the upload
 						xhr.open('POST', 'assets/engines/' + opts.engine + '/' + opts.handler + '?method=doFileUpload', true);
 						xhr.setRequestHeader('Content-Type', file.type);
-						xhr.setRequestHeader('X-Filename', file.fileName);
+						xhr.setRequestHeader('X-Filename', file.name);
 						xhr.setRequestHeader('X-File-Params', prms);
 						xhr.onload = function() {
 							try {
@@ -1312,18 +1311,38 @@
 
 			// do we have a cookie with out last directory?
 			var c = $.cookie('cj_dir'),
-				t = '/';
+				t = '/',
+				tempBaseRef = [];
 			if (c !== null && typeof c === 'string' && c.length > 1) {
 				c = c.substring(1, c.length - 1);
 				c = c.split('/');
-				opts.baseRelPath = ['/'];
+				//opts.baseRelPath = ['/'];
 				$.each(c, function (idx, val) {
 					if (val.length > 0) {
 						t += val + '/';
-						opts.baseRelPath.push(t);
+						if (opts.baseRelPath.indexOf(t) > -1) {
+							tempBaseRef.push(t);
+						}
 					}
 				});
-				sys.currentUrl = c.length;
+				if (tempBaseRef.length > 0) {
+					opts.baseRelPath = tempBaseRef;
+				}
+				sys.currentUrl = opts.baseRelPath.length;
+				$.cookie('cj_dir', opts.baseRelPath[sys.currentUrl], {
+					expires: 1,
+					path: '/'
+				});
+			} else {
+				// no cookie, set one
+				$.cookie('cj_dir', opts.baseRelPath[0], {
+					expires: 1,
+					path: '/'
+				});
+			}
+
+			if (sys.debug) {
+				console.log($.cookie('cj_dir'));
 			}
 
 			// get directory listing

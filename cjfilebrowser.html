@@ -64,7 +64,7 @@
 		if (parent && parent.tinyMCE) {
 
 			$.getScript('../../tiny_mce_popup.js', function() {
-				tinyMCEPopup.onInit.add($('#CJFileBrowser').cjFileBrowser(), $);
+				tinyMCEPopup.onInit.add($('#CJFileBrowser').cjFileBrowser(), $('#CJFileBrowser')[0]);
 			});
 
 		} else {
