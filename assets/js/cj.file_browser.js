@@ -84,6 +84,10 @@
 							   Removed old file upload structure.
 							   Added Drag-N-Drop upload support.
 							   Sarted laying groundwork for use of "absolute" paths.
+	4.0.1		(2011-12-05) - Squashed some more bugs.
+							   Reintegrated the old fileUpload option.
+							   Renamed the drag-and-drop options dropUpload.
+							   Cleaned up some CSS.
 
  *********************************************************************************** */
 (function ($) {
@@ -112,7 +116,7 @@
 				autoCenter: null,
 				currentUrl: 0,
 				dirContents: [],
-				debug: true
+				debug: false
 			};
 
 
@@ -489,7 +493,6 @@
 			$('#sidebar ul').remove();
 			$('#browser ul').remove();
 			resetAllOptions();
-
 
 			json = $.parseJSON(
 			$.ajax({
@@ -938,9 +941,9 @@
 					} else {
 
 						// do the upload
-						xhr.open('POST', 'assets/engines/' + opts.engine + '/' + opts.handler + '?method=doFileUpload', true);
+						xhr.open('POST', 'assets/engines/' + opts.engine + '/' + opts.handler + '?method=doDropUpload&returnformat=JSON', true);
 						xhr.setRequestHeader('Content-Type', file.type);
-						xhr.setRequestHeader('X-Filename', file.name);
+						xhr.setRequestHeader('X-Filename', file.name || file.fileName);
 						xhr.setRequestHeader('X-File-Params', prms);
 						xhr.onload = function() {
 							try {
@@ -1006,6 +1009,28 @@
 			return false;
 		}
 
+		function doPostEval (r) {
+			var json,
+				ok = false;
+			try {
+				// if we don't have valid JSON, this should fail.
+				json = JSON.parse(r);
+				ok = true;
+			} catch (ex) {}
+			if (ok && typeof json === 'object' && typeof json.ERROR === 'boolean' && !json.ERROR) {
+				doDirListing(function() {
+					console.log('hit');
+					displayDirListing();
+				});
+			} else {
+				displayDialog({
+					type: "alert",
+					state: "show",
+					label: "Oops! There was a problem",
+					content: ok && json && json.ERROR_MSG ? json.ERROR_MSG : ''
+				});
+			}
+		}
 
 		function setup() {
 
@@ -1050,7 +1075,7 @@
 			});
 
 			// setup droppable files for the browser
-			if ($.inArray('fileSelect', opts.actions) > 0) {
+			if ($.inArray('dropUpload', opts.actions) > 0) {
 				$('#browser').on('dragenter', dragEnter);
 				$('#browser').on('dragover', dragOver);
 				$('#browser').on('dragleave', dragLeave);
@@ -1281,6 +1306,141 @@
 				});
 			}
 
+			// handle the UPLOAD action
+			if ($.inArray('fileUpload', opts.actions) === -1) {
+				$('#fileOptions #fileUpload').remove();
+			} else {
+				$('#fileUpload').mouseup(function () {
+					var $this = $(this);
+					$this.css({
+						'background-position': '0px 0px'
+					}).attr('disabled', true);
+					displayDialog({
+						type: 'confirm',
+						state: 'show',
+						label: 'Upload a file...',
+						content: (
+							'<form name="CJUploadForm" id="CJUploadForm" action="javascript:void(0);" method="post">' +
+								'<div class="fields">' +
+									'<input type="file" name="fileUploadField" id="fileUploadField" \/>' +
+								'<\/div>' +
+							'<\/form>'
+						),
+						cbOk: function () {
+							if ($('#CJUploadForm #fileUploadField').val() !== '') {
+								$('#CJFileBrowser #CJFileBrowserForm').append(
+									'<div class="hider">' +
+										'<input type="hidden" name="baseUrl" value="' + window.encodeURIComponent(opts.baseRelPath[sys.currentUrl]) + '" \/>' +
+										'<input type="hidden" name="fileExts" value="' + window.encodeURIComponent(opts.fileExts) + '" \/>' +
+										'<input type="hidden" name="maxSize" value="' + window.encodeURIComponent(opts.maxSize) + '" \/>' +
+										'<input type="hidden" name="maxWidth" value="' + window.encodeURIComponent(opts.maxWidth) + '" \/>' +
+										'<input type="hidden" name="maxHeight" value="' + window.encodeURIComponent(opts.maxHeight) + '" \/>' +
+										'<input type="hidden" name="timeOut" value="' + parseInt(opts.timeOut, 10) + '" \/>' +
+									'<\/div>'
+								);
+								$('#CJUploadForm #fileUploadField').appendTo($('#CJFileBrowser #CJFileBrowserForm .hider'));
+								displayDialog({
+									type: 'confirm',
+									state: 'hide'
+								});
+								$('#fileUpload').attr('disabled', false);
+								$('#CJFileBrowserForm').submit();
+							}
+						},
+						cbCancel: function () {
+							$('#fileUpload').attr('disabled', false);
+						}
+					});
+					// fix the file upload input
+					$('#CJUploadForm #fileUploadField').css({
+						opacity: 0.0
+					}).change(function () {
+						$('#CJUploadForm #uploadFakeFile').val($(this).val());
+					});
+					$('#CJUploadForm .fields').append(
+					$('<div></div>').addClass('fakefile').append(
+					$('<input>').attr({
+						type: 'text',
+						id: 'uploadFakeFile'
+					}), $('<img>').attr({
+						src: 'assets/images/bg_fileselect.png'
+					}).css('z-index', -1))).addClass('clearfix');
+				}).attr('disabled', false);
+
+				// handle the FORM submit
+				$('#CJFileBrowserForm').submit(function () {
+					var $formElem = $(this),
+						ifrmName = ('uploader' + (new Date()).getTime()),
+						jFrame, base_path;
+
+					// display the progress bar...
+					displayDialog({
+						type: 'progress',
+						state: 'show',
+						label: 'Uploading file...'
+					});
+
+					// do some fancy form stuff... (posting into an iframe)
+					jFrame = $('<iframe name="' + ifrmName + '" id="' + ifrmName + '" src="about:blank"></iframe>');
+					jFrame.css({
+						position: 'absolute',
+						top: sys.debug ? '0px' : '-999px',
+						left: sys.debug ? '0px' : '-999px',
+						display: sys.debug ? 'block' : 'none',
+						width: sys.debug ? '100%' : '1px',
+						height: sys.debug ? 'auto' : '1px',
+						background: '#fff',
+						zIndex: 9999
+					});
+					jFrame.load(function (objEvent) {
+						var objUploadBody = $(this).contents().find('body').html();
+						if ($.trim(objUploadBody) !== '') {
+							$formElem.attr({
+								action: function () {
+									return false;
+								},
+								method: 'post',
+								enctype: 'multipart/form-data',
+								encoding: 'multipart/form-data',
+								target: ''
+							});
+							clearTimer();
+							$('#CJFileBrowserForm').find('.hider').remove();
+							doPostEval($.trim(objUploadBody));
+							sys.timer = window.setTimeout(function () {
+								jFrame.remove();
+							}, 100);
+						}
+					});
+					$('body').append(jFrame);
+
+					// set a nice timer to ensure that the CFC does not timeout
+					sys.timer = window.setTimeout(function () {
+						displayDialog({
+							type: 'alert',
+							state: 'show',
+							label: 'Oops! There was a problem',
+							content: 'The system timed out attempting to upload a file.'
+						});
+						jFrame.remove();
+						$('#CJFileBrowserForm').find('.hider').remove();
+						$('#fileUpload').attr('disabled', false);
+					}, parseInt(opts.timeOut, 10) * 1000);
+
+					// We don't know where we are at. So we need to determine the path to do the form submit.
+					// not sure if this is elegant or a mess, but it works.
+					base_path = (document.location.href.split('?')[0]).replace(/(\/|\\)cjfilebrowser\.html/g, '');
+					$formElem.attr({
+						action: base_path + '/assets/engines/' + opts.engine + '/' + opts.handler + '?method=doFileUpload',
+						method: 'post',
+						enctype: 'multipart/form-data',
+						encoding: 'multipart/form-data',
+						target: ifrmName
+					});
+					return true;
+				});
+			}
+
 			// handle the file SELECT action
 			if ($.inArray('fileSelect', opts.actions) === -1) {
 				$('#fileOptions #fileSelect').remove();
@@ -1316,11 +1476,10 @@
 			if (c !== null && typeof c === 'string' && c.length > 1) {
 				c = c.substring(1, c.length - 1);
 				c = c.split('/');
-				//opts.baseRelPath = ['/'];
 				$.each(c, function (idx, val) {
 					if (val.length > 0) {
 						t += val + '/';
-						if (opts.baseRelPath.indexOf(t) > -1) {
+						if (t.length >= opts.baseRelPath[0].length && t.indexOf(opts.baseRelPath[0]) > -1) {
 							tempBaseRef.push(t);
 						}
 					}
@@ -1328,7 +1487,7 @@
 				if (tempBaseRef.length > 0) {
 					opts.baseRelPath = tempBaseRef;
 				}
-				sys.currentUrl = opts.baseRelPath.length;
+				sys.currentUrl = opts.baseRelPath.length - 1;
 				$.cookie('cj_dir', opts.baseRelPath[sys.currentUrl], {
 					expires: 1,
 					path: '/'
@@ -1342,7 +1501,9 @@
 			}
 
 			if (sys.debug) {
-				console.log($.cookie('cj_dir'));
+				console.log('sys.currentUrl: ' + sys.currentUrl);
+				console.log('opts.baseRelPath: ' + opts.baseRelPath);
+				console.log('cookie: ' + $.cookie('cj_dir'));
 			}
 
 			// get directory listing
@@ -1392,22 +1553,24 @@
 				'<div id="sidebar"></div>' +
 				'<div id="browser"></div>' +
 				'<div id="header">' +
-					'<form name="CJFileBrowserForm" id="CJFileBrowserForm" action="javascript:void(0);" method="post" enctype="multipart/form-data"></form>' +
-					'<div class="padder">' +
-						'<div id="directoryOptions">' +
-							'<button name="directoryOut" id="directoryOut" disabled="disabled"><span>Back Directory</span></button>' +
-							'<button name="directoryIn" id="directoryIn" disabled="disabled"><span>Forward Directory</span></button>' +
-							'<div class="container">' +
-								'<label for="directories">Directories: </label>' +
-								'<select name="directories" id="directories" disabled="disabled"><option value=""></option></select>' +
+					'<form name="CJFileBrowserForm" id="CJFileBrowserForm" action="javascript:void(0);" method="post" enctype="multipart/form-data">' +
+						'<div class="padder">' +
+							'<div id="directoryOptions">' +
+								'<button name="directoryOut" id="directoryOut" disabled="disabled"><span>Back Directory</span></button>' +
+								'<button name="directoryIn" id="directoryIn" disabled="disabled"><span>Forward Directory</span></button>' +
+								'<div class="container">' +
+									'<label for="directories">Directories: </label>' +
+									'<select name="directories" id="directories" disabled="disabled"><option value=""></option></select>' +
+								'</div>' +
+							'</div>' +
+							'<div id="fileOptions">' +
+								'<button type="button" name="newfolder" id="newfolder" disabled="disabled"><span>Create Folder</span></button>' +
+								'<button type="button" name="fileUpload" id="fileUpload" disabled="disabled"><span>Upload</span></button>' +
+								'<button type="button" name="fileDelete" id="fileDelete" disabled="disabled"><span>Delete</span></button>' +
+								'<button type="button" name="fileSelect" id="fileSelect" disabled="disabled"><span>Select</span></button>' +
 							'</div>' +
 						'</div>' +
-						'<div id="fileOptions">' +
-							'<button type="button" name="newfolder" id="newfolder" disabled="disabled"><span>Create Folder</span></button>' +
-							'<button type="button" name="fileDelete" id="fileDelete" disabled="disabled"><span>Delete</span></button>' +
-							'<button type="button" name="fileSelect" id="fileSelect" disabled="disabled"><span>Select</span></button>' +
-						'</div>' +
-					'</div>' +
+					'</form>' +
 				'</div>' +
 				'<div id="footer"></div>'
 			);
@@ -1417,7 +1580,7 @@
 			$obj.find('#footer').append('<div class="stats"><\/div>');
 
 			// if we are a tinyMCE plug-in then we need to grab the user settings
-			if (tinyMCE) {
+			if (typeof tinyMCE !== 'undefined') {
 
 				opts.actions = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_actions') === "string" ? (tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_actions')).split(",") : "";
 				opts.baseRelPath.push(typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_assetsUrl') === "string" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_assetsUrl') : "");

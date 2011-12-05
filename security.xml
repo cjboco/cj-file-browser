@@ -11,6 +11,7 @@
 		<action>deleteDirectory</action>
 		<action>fileDelete</action>
 		<action>fileUpload</action>
+		<action>dropUpload</action>
 		<action>filePreviews</action>
 		<action>fileSelect</action>
 	</actionsAllowed>
@@ -21,7 +22,7 @@
 		*Relative from ROOT (Don't use "../" not sure that will work)
 	********************************************** -->
 	<directoriesAllowed>
-		<directory type="relative">/</directory>
+		<directory type="relative">/GitHub/cj-file-browser/</directory>
 	</directoriesAllowed>
 
 	<!-- **********************************************

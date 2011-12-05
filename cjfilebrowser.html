@@ -27,14 +27,14 @@
 <body>
 
 <div id="CJFileBrowser"></div>
-
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js"></script>
 <script src="assets/js/date.format.js"></script>
-<script src="assets/js/cj.file_browser.js" content="no-cache"></script>
 <script><!--
 (function ($) {
 	"use strict";
+
+	var c = new Date();
 
 	// grab URL parameters
 	function getUrlParams(key) {
@@ -57,51 +57,55 @@
 		return a.length > 0 ? a[1] : undefined;
 	}
 
-	// make sure jQuery and support plug-ins are present
-	if (typeof dateFormat !== "undefined" && $.cjFileBrowser) {
+	$.getScript('assets/js/cj.file_browser.js?c=' + c.getTime(), function() {
 
-		// We need to determine if we are a tinyMCE plug-in or running in stand-along mode and init accordingly
-		if (parent && parent.tinyMCE) {
+		// make sure jQuery and support plug-ins are present
+		if (typeof dateFormat !== "undefined" && $.cjFileBrowser) {
 
-			$.getScript('../../tiny_mce_popup.js', function() {
-				tinyMCEPopup.onInit.add($('#CJFileBrowser').cjFileBrowser(), $('#CJFileBrowser')[0]);
-			});
+			// We need to determine if we are a tinyMCE plug-in or running in stand-along mode and init accordingly
+			if (parent && parent.tinyMCE) {
+
+				$.getScript('../../tiny_mce_popup.js', function() {
+					$('#CJFileBrowser').cjFileBrowser();
+					tinyMCEPopup.onInit.add($('#CJFileBrowser').cjFileBrowser('init'), $('#CJFileBrowser')[0]);
+				});
+
+			} else {
+
+				$('#CJFileBrowser').cjFileBrowser({
+					actions: ["navigateDirectory","createDirectory","deleteDirectory","fileDelete","fileUpload","fileSelect"],
+					baseRelPath: typeof getUrlParams('baseRelPath') !== "undefined" ? [getUrlParams('baseRelPath')] : ["/GitHub/cj-file-browser/"],
+					baseAbsPath: [],
+					fileExts: getUrlParams('fileExts') || "*",
+					maxSize: parseInt(getUrlParams('maxSize'), 10) || 1500,
+					maxWidth: parseInt(getUrlParams('maxWidth'), 10) || 600,
+					maxHeight: parseInt(getUrlParams('maxHeight'), 10) || 800,
+					showImgPreview: getUrlParams('showImgPreview') !== "undefined" ? Boolean(getUrlParams('showImgPreview')): true,
+					engine: "coldfusion8",
+					handler: "handler.cfc",
+					timeOut: 900, // 15 minutes
+					callBack: function(fileObj) {
+						if (typeof fileObj === "object") {
+							if (typeof parent.fileSelectCallback === "function") {
+								parent.fileSelectCallback(fileObj.DIRECTORY + fileObj.NAME);
+							} else {
+								throw("CJ File Browser was not setup properly. Missing fileSelectCallback function.");
+							}
+						} else {
+							throw("Problems reading file selction object.");
+						}
+					}
+				});
+
+			}
 
 		} else {
 
-			$('#CJFileBrowser').cjFileBrowser({
-				actions: ["navigateDirectory","createDirectory","deleteDirectory","fileDelete","fileUpload","fileSelect"],
-				baseRelPath: typeof getUrlParams('baseRelPath') !== "undefined" ? [getUrlParams('baseRelPath')] : ["/"],
-				baseAbsPath: [],
-				fileExts: getUrlParams('fileExts') || "*",
-				maxSize: parseInt(getUrlParams('maxSize'), 10) || 1500,
-				maxWidth: parseInt(getUrlParams('maxWidth'), 10) || 600,
-				maxHeight: parseInt(getUrlParams('maxHeight'), 10) || 800,
-				showImgPreview: getUrlParams('showImgPreview') !== "undefined" ? Boolean(getUrlParams('showImgPreview')): true,
-				engine: "coldfusion8",
-				handler: "handler.cfc",
-				timeOut: 900, // 15 minutes
-				callBack: function(fileObj) {
-					if (typeof fileObj === "object") {
-						if (typeof parent.fileSelectCallback === "function") {
-							parent.fileSelectCallback(fileObj.DIRECTORY + fileObj.NAME);
-						} else {
-							throw("CJ File Browser was not setup properly. Missing fileSelectCallback function.");
-						}
-					} else {
-						throw("Problems reading file selction object.");
-					}
-				}
-			});
+			// jQuery wasn't included while loading the HTML page.
+			throw("You must have jQuery and all the required plugins installed in order to use CJ File Browser.");
 
 		}
-
-	} else {
-
-		// jQuery wasn't included while loading the HTML page.
-		throw("You must have jQuery and all the required plugins installed in order to use CJ File Browser.");
-
-	}
+	});
 
 }(jQuery));
 //-->

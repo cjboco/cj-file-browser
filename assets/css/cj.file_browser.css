@@ -520,8 +520,8 @@ a:hover {
 #header button[disabled],
 #header button[disabled="disabled"],
 #header button.disabled {
-	background-position: 0px -64px;
-	cursor: default;
+	background-position: 0px -64px !important;
+	cursor: default !important;
 }
 
 #header button.deactive {

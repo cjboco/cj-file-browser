@@ -635,6 +635,209 @@
 
 	------------------------------------------------------------------------ --->
 	<cffunction name="doFileUpload" access="remote" output="true" returntype="none">
+		<cfset var locvar = StructNew() />
+		<cfset var result = StructNew() />
+		<cfset result.error = false />
+		<cfset result.error_msg = ArrayNew(1) />
+		<cftry>
+
+			<!--- make sure this is a post operation --->
+			<cfif cgi.request_method neq "post">
+
+				<cfset result.error = true />
+				<cfset result.error_msg = "HTTP request method not allowed." />
+
+			<!--- double check we have all our variables --->
+			<cfelseif
+				NOT StructKeyExists(arguments,"baseUrl") or
+				NOT StructKeyExists(arguments,"maxWidth") or
+				NOT StructKeyExists(arguments,"maxHeight") or
+				NOT StructKeyExists(arguments,"maxSize") or
+				NOT StructKeyExists(arguments,"fileExts") or
+				NOT StructKeyExists(arguments,"fileUploadField") or
+				NOT StructKeyExists(arguments,"timeOut")>
+
+				<cfset result.error = true />
+				<cfset result.error_msg = "Could not complete upload. Required form variables missing." />
+
+			<cfelse>
+
+				<!--- check to see if they passed a timout value --->
+				<cfif StructKeyExists(arguments,"timeOut") and isNumeric(arguments['timeOut']) and arguments['timeOut'] gt 0>
+					<cfsetting requestTimeout="#arguments['timeOut']#" />
+				</cfif>
+
+				<!--- preload our security settings (since we have to read this in each time) --->
+				<cfset locvar.authDirs = getSecuritySettings('directories') />
+				<cfset locvar.authActions = getSecuritySettings('actions') />
+				<cfset locvar.authExts = getSecuritySettings('fileExts') />
+				<!---
+					We can check the file size in the temp folder! Thanks Dave (aka Mister Dai)
+					http://misterdai.wordpress.com/2010/02/26/upload-size-before-cffile-upload/
+				--->
+				<cfset locvar.fileSize = GetFileInfo(GetTempDirectory() & GetFileFromPath(arguments['fileUploadField'])) />
+
+				<!--- validate "navigateDirectory" action and path --->
+				<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(arguments['baseUrl'],true,locvar.authDirs)) or NOT isPathValid(arguments['baseUrl'],false,locvar.authDirs)>
+
+					<cfset result.error = true />
+					<cfset result.error_msg = "Directory access denied." />
+
+				<!--- validate action --->
+				<cfelseif NOT isActionValid("fileUpload",locvar.authActions)>
+
+					<cfset result.error = true />
+					<cfset result.error_msg = "Not authorized to upload files." />
+
+				<!--- validate that the "baseUrl" exists --->
+				<cfelseif NOT DirectoryExists(ExpandPath(URLDecode(arguments['baseUrl'])))>
+
+					<cfset result.error = true />
+					<cfset result.error_msg = "Directory does not exist." />
+
+				<cfelseif isDefined("locvar.fileSize.size") and locvar.fileSize.size gt (form.maxSize * 1024)>
+
+					<cfset result.error = true />
+					<cfset ArrayAppend(result.error_msg, "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(form.maxSize,'9,999')#KB.")>
+
+				<cfelse>
+
+					<!--- <cfset form = arguments /> --->
+
+					<!--- validate that we have the proper form fields --->
+					<cfif NOT DirectoryExists(ExpandPath(URLDecode(form.baseUrl)))>
+						<cfset result.error = true />
+						<cfset ArrayAppend(result.error_msg, "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
+					</cfif>
+					<cfif NOT isDefined("form.baseUrl") or (isDefined("form.baseUrl") and (Len(form.baseUrl) eq 0 or ReFind("[^a-zA-Z0-9\,\$\-\_\.\+\!\*\'\(\)\/]+",URLDecode(form.baseUrl)) gt 0))>
+						<cfset result.error = true />
+						<cfset ArrayAppend(result.error_msg, "Variable BASEURL not defined or invalid data.") />
+					</cfif>
+					<cfif NOT isDefined("form.fileExts") or (isDefined("form.fileExts") and form.fileExts neq "*" and ReFind("[^a-zA-Z0-9\,]+",URLDecode(form.fileExts)) gt 0)>
+						<cfset result.error = true />
+						<cfset ArrayAppend(result.error_msg, "Variable FILEEXTS not defined or invalid data.") />
+					<cfelse>
+						<!--- remove any spaced between the list items ", " or " ," --->
+						<cfset form.fileExts = ReReplace(URLDecode(form.fileExts), "[\s]*,[\s]*",",","ALL") />
+					</cfif>
+					<cfif NOT isNumeric(form.maxSize) or (isNumeric(form.maxSize) and (form.maxSize lt 1 or form.maxSize gt 9999999))>
+						<cfset result.error = true />
+						<cfset ArrayAppend(result.error_msg, "Variable MAXSIZE not defined or invalid data.") />
+					</cfif>
+					<cfif NOT isNumeric(form.maxWidth) or (isNumeric(form.maxWidth) and (form.maxWidth lt 1 or form.maxSize gt 9999999))>
+						<cfset result.error = true />
+						<cfset ArrayAppend(result.error_msg, "Variable MAXWIDTH not defined or invalid data.") />
+					</cfif>
+					<cfif NOT isNumeric(form.maxHeight) or (isNumeric(form.maxHeight) and (form.maxHeight lt 1 or form.maxHeight gt 9999999))>
+						<cfset result.error = true />
+						<cfset ArrayAppend(result.error_msg, "Variable MAXHEIGHT not defined or invalid data.") />
+					</cfif>
+					<cfif NOT isDefined("form.fileUploadField") or (isDefined("form.fileUploadField") and Len(URLDecode(form.fileUploadField)) eq 0)>
+						<cfset result.error = true />
+						<cfset ArrayAppend(result.error_msg, "FILE INPUT FILED not defined or invalid data.") />
+					</cfif>
+
+					<cfif NOT result.error and ArrayLen(result.error_msg) eq 0>
+
+						<!---
+							File Upload Notes:
+							I would have rather uploaded to the temp directory and then move the file. but ColdFusion doesn't seem to check for name
+							conflicts on "rename" or "move". If anyone knows an easy way around this, please share.
+						--->
+
+						<!--- upload the file --->
+						<cffile action="upload" filefield="fileUploadField" destination="#ExpandPath(URLDecode(form.baseUrl))#" nameconflict="makeunique" />
+
+						<!--- if the file uploaded, then continue --->
+						<cfif cffile.filewassaved eq "Yes" and cffile.fileSize lte (form.maxSize * 1024)>
+
+							<!--- make sure that the uploaded file has the correct file extension (This still doesn't mean it VALID! --->
+							<cfif isFileExtValid(cffile.serverFileExt,locvar.authExts) and (form.fileExts eq "*" or (form.fileExts neq "*" and ListFindNoCase(form.fileExts, cffile.serverFileExt) gt 0))>
+
+								<!---
+									check file name and move out of temp directory
+								—————————————————————————————————————————————————————————————————————————————————————— --->
+								<cfset locvar.file_name = safeFileName(cffile.serverFileName) & "." & cffile.serverFileExt />
+								<cffile action="rename" source="#ExpandPath(URLDecode(form.baseUrl)&cffile.ServerFile)#" destination="#ExpandPath(URLDecode(form.baseUrl)&locvar.file_name)#" />
+
+								<!--- CHECK TO SEE IF THE WAS AN IMAGE BEFORE WE SCALE IT --->
+								<!--- We could use isImageFile(), but if CF8 is missing an update it could crash the server. --->
+								<cfif ListFindNoCase(variables.webImgFileList, cffile.serverFileExt) gt 0 and isNumeric(form.maxWidth) and isNumeric(form.maxHeight)>
+									<!---
+										resize the image if it's to big
+									—————————————————————————————————————————————————————————————————————————————————————— --->
+									<cfimage action="read" name="locvar.temp_file" source="#ExpandPath('#URLDecode(form.baseUrl)##locvar.file_name#')#" />
+									<cfif locvar.temp_file["width"] gt form.maxWidth or locvar.temp_file["height"] gt form.maxHeight>
+										<cfset ImageSetAntialiasing(locvar.temp_file, "on") />
+										<cfset locvar.img_info = calcScaleInfo(locvar.temp_file["width"], locvar.temp_file["height"], form.maxWidth, form.maxHeight, "fit") />
+										<cfset ImageScaleToFit(locvar.temp_file, locvar.img_info.width, locvar.img_info.height, "highestQuality", "1") />
+										<cfimage action="write" source="#locvar.temp_file#" destination="#ExpandPath('#URLDecode(form.baseUrl)##locvar.file_name#')#" overwrite="yes" />
+									</cfif>
+
+								</cfif>
+
+							<!--- not a valid file extension --->
+							<cfelse>
+
+								<cfset result.error = true />
+								<cfset ArrayAppend(result.error_msg, "You are not allowed to upload #UCase(cffile.serverFileExt)# files.") />
+
+								<!--- delete the file --->
+								<cffile action="delete" file="#ExpandPath(URLDecode(form.baseUrl)&cffile.ServerFile)#" />
+
+							</cfif>
+
+						<cfelseif cffile.filewassaved eq "Yes" and cffile.fileSize gt (form.maxSize * 1024)>
+							<!--- file is too big --->
+							<cfif FileExists(ExpandPath('#URLDecode(form.baseUrl)##cffile.ServerFile#'))>
+								<cffile action="delete" file="#ExpandPath('#URLDecode(form.baseUrl)##cffile.ServerFile#')#" />
+							</cfif>
+							<cfset result.error = true />
+							<cfset ArrayAppend(result.error_msg, "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(form.maxSize,'9,999')#KB.")>
+						<cfelse>
+							<!--- cffile.filewassaved = "no" --->
+							<cfset result.error = true />
+							<cfset ArrayAppend(result.error_msg, "Problems encountered uploading the file.")>
+						</cfif>
+
+					<cfelse>
+						<!--- ArrayLen(result.error_msg) > 0 --->
+						<cfset result.error = true />
+						<cfset result.error_msg = result.error_msg />
+					</cfif>
+
+				</cfif>
+			</cfif>
+
+			<cfcatch type="any">
+				<cfset result.error = true />
+				<cfset result.error_msg = cfcatch.message />
+			</cfcatch>
+		</cftry>
+
+		<cfsavecontent variable="locvar.strHTML">
+			<cfoutput>
+				<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+				<html>
+				<head></head>
+				<body>#ReReplace(Trim(HTMLEditFormat(SerializeJSON(result))),"[\t]+","","ALL")#</body>
+				</html>
+			</cfoutput>
+		</cfsavecontent>
+		<cfset locvar.binResponse = ToBinary( ToBase64( locvar.strHTML ) ) />
+		<cfcontent reset="true" /><cfheader name="content-length" value="#ArrayLen( locvar.binResponse )#" /><cfcontent type="text/html" variable="#locvar.binResponse#" />
+	</cffunction>
+
+
+	<!--- ------------------------------------------------------------------------
+
+		doDropUpload - Uploads a file to the server (Handles a form POST operation)
+
+		Author: Doug Jones
+		http://www.cjboco.com/
+
+	------------------------------------------------------------------------ --->
+	<cffunction name="doDropUpload" access="remote" output="true" returntype="none">
 
 		<cfset var result = StructNew() />
 		<cfset var locvar = StructNew() />
@@ -829,7 +1032,7 @@
 		<cfelse>
 
 			<cfset result.error = true />
-			<cfset result.msg = "Invalid request method. (doFileUpload)" />
+			<cfset result.msg = "Invalid request method. (doDropUpload)" />
 
 		</cfif>
 
