@@ -117,7 +117,7 @@
 				currentUrl: 0,
 				dirContents: [],
 				basePath: '/',
-				debug: false
+				debug: true
 			};
 
 
@@ -1475,10 +1475,7 @@
 				t = '/',
 				tempBaseRef = [];
 			sys.basePath = opts.baseRelPath[0];
-			console.log(c);
-			console.log(sys.basePath);
-			console.log(c.indexOf(sys.basePath));
-			if (c.indexOf(sys.basePath) > -1 && c !== null && typeof c === 'string' && c.length > 1) {
+			if (c !== null && typeof c === 'string' && c.length > 1 && c.indexOf(sys.basePath) > -1) {
 				c = c.substring(1, c.length - 1);
 				c = c.split('/');
 				$.each(c, function (idx, val) {
