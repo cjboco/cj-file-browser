@@ -74,7 +74,7 @@
 
 				$('#CJFileBrowser').cjFileBrowser({
 					actions: ["navigateDirectory","createDirectory","deleteDirectory","fileDelete","fileUpload","fileSelect"],
-					baseRelPath: typeof getUrlParams('baseRelPath') !== "undefined" ? [getUrlParams('baseRelPath')] : ["/GitHub/cj-file-browser/"],
+					baseRelPath: typeof getUrlParams('baseRelPath') !== "undefined" ? [getUrlParams('baseRelPath')] : ["/"],
 					baseAbsPath: [],
 					fileExts: getUrlParams('fileExts') || "*",
 					maxSize: parseInt(getUrlParams('maxSize'), 10) || 1500,

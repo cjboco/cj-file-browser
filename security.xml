@@ -22,7 +22,7 @@
 		*Relative from ROOT (Don't use "../" not sure that will work)
 	********************************************** -->
 	<directoriesAllowed>
-		<directory type="relative">/GitHub/cj-file-browser/</directory>
+		<directory type="relative">/</directory>
 	</directoriesAllowed>
 
 	<!-- **********************************************

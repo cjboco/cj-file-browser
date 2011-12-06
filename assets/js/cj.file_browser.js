@@ -116,6 +116,7 @@
 				autoCenter: null,
 				currentUrl: 0,
 				dirContents: [],
+				basePath: '/',
 				debug: false
 			};
 
@@ -529,7 +530,7 @@
 							if (typeof sys.dirContents === 'object' && sys.dirContents.length > 0) {
 								$.cookie('cj_dir', opts.baseRelPath[sys.currentUrl], {
 									expires: 1,
-									path: '/'
+									path: sys.basePath
 								});
 								if ($.isFunction(clb)) {
 									clb.apply();
@@ -1473,13 +1474,17 @@
 			var c = $.cookie('cj_dir'),
 				t = '/',
 				tempBaseRef = [];
-			if (c !== null && typeof c === 'string' && c.length > 1) {
+			sys.basePath = opts.baseRelPath[0];
+			console.log(c);
+			console.log(sys.basePath);
+			console.log(c.indexOf(sys.basePath));
+			if (c.indexOf(sys.basePath) > -1 && c !== null && typeof c === 'string' && c.length > 1) {
 				c = c.substring(1, c.length - 1);
 				c = c.split('/');
 				$.each(c, function (idx, val) {
 					if (val.length > 0) {
 						t += val + '/';
-						if (t.length >= opts.baseRelPath[0].length && t.indexOf(opts.baseRelPath[0]) > -1) {
+						if (t.length >= sys.basePath.length && t.indexOf(sys.basePath) > -1) {
 							tempBaseRef.push(t);
 						}
 					}
@@ -1490,13 +1495,13 @@
 				sys.currentUrl = opts.baseRelPath.length - 1;
 				$.cookie('cj_dir', opts.baseRelPath[sys.currentUrl], {
 					expires: 1,
-					path: '/'
+					path: sys.basePath
 				});
 			} else {
 				// no cookie, set one
-				$.cookie('cj_dir', opts.baseRelPath[0], {
+				$.cookie('cj_dir', sys.basePath, {
 					expires: 1,
-					path: '/'
+					path: sys.basePath
 				});
 			}
 
@@ -1549,71 +1554,75 @@
 
 		function init() {
 
-			$obj.html(
-				'<div id="sidebar"></div>' +
-				'<div id="browser"></div>' +
-				'<div id="header">' +
-					'<form name="CJFileBrowserForm" id="CJFileBrowserForm" action="javascript:void(0);" method="post" enctype="multipart/form-data">' +
-						'<div class="padder">' +
-							'<div id="directoryOptions">' +
-								'<button name="directoryOut" id="directoryOut" disabled="disabled"><span>Back Directory</span></button>' +
-								'<button name="directoryIn" id="directoryIn" disabled="disabled"><span>Forward Directory</span></button>' +
-								'<div class="container">' +
-									'<label for="directories">Directories: </label>' +
-									'<select name="directories" id="directories" disabled="disabled"><option value=""></option></select>' +
+			if (typeof options === 'object' || (typeof options === 'string' && options === 'init')) {
+
+				$obj.html(
+					'<div id="sidebar"></div>' +
+					'<div id="browser"></div>' +
+					'<div id="header">' +
+						'<form name="CJFileBrowserForm" id="CJFileBrowserForm" action="javascript:void(0);" method="post" enctype="multipart/form-data">' +
+							'<div class="padder">' +
+								'<div id="directoryOptions">' +
+									'<button name="directoryOut" id="directoryOut" disabled="disabled"><span>Back Directory</span></button>' +
+									'<button name="directoryIn" id="directoryIn" disabled="disabled"><span>Forward Directory</span></button>' +
+									'<div class="container">' +
+										'<label for="directories">Directories: </label>' +
+										'<select name="directories" id="directories" disabled="disabled"><option value=""></option></select>' +
+									'</div>' +
+								'</div>' +
+								'<div id="fileOptions">' +
+									'<button type="button" name="newfolder" id="newfolder" disabled="disabled"><span>Create Folder</span></button>' +
+									'<button type="button" name="fileUpload" id="fileUpload" disabled="disabled"><span>Upload</span></button>' +
+									'<button type="button" name="fileDelete" id="fileDelete" disabled="disabled"><span>Delete</span></button>' +
+									'<button type="button" name="fileSelect" id="fileSelect" disabled="disabled"><span>Select</span></button>' +
 								'</div>' +
 							'</div>' +
-							'<div id="fileOptions">' +
-								'<button type="button" name="newfolder" id="newfolder" disabled="disabled"><span>Create Folder</span></button>' +
-								'<button type="button" name="fileUpload" id="fileUpload" disabled="disabled"><span>Upload</span></button>' +
-								'<button type="button" name="fileDelete" id="fileDelete" disabled="disabled"><span>Delete</span></button>' +
-								'<button type="button" name="fileSelect" id="fileSelect" disabled="disabled"><span>Select</span></button>' +
-							'</div>' +
-						'</div>' +
-					'</form>' +
-				'</div>' +
-				'<div id="footer"></div>'
-			);
+						'</form>' +
+					'</div>' +
+					'<div id="footer"></div>'
+				);
 
-			// setup the footer
-			$obj.find('#footer').append('<div class="callout"><div class="margins">CJ File Browser <strong id="CJVersion">v' + sys.version + '<\/strong>. Created by <a href="http://www.cjboco.com/" target="_blank" title="Creative Juice Bo. Co.">Creative Juice Bo. Co.<\/a><\/div><\/div>');
-			$obj.find('#footer').append('<div class="stats"><\/div>');
+				// setup the footer
+				$obj.find('#footer').append('<div class="callout"><div class="margins">CJ File Browser <strong id="CJVersion">v' + sys.version + '<\/strong>. Created by <a href="http://www.cjboco.com/" target="_blank" title="Creative Juice Bo. Co.">Creative Juice Bo. Co.<\/a><\/div><\/div>');
+				$obj.find('#footer').append('<div class="stats"><\/div>');
 
-			// if we are a tinyMCE plug-in then we need to grab the user settings
-			if (typeof tinyMCE !== 'undefined') {
+				// if we are a tinyMCE plug-in then we need to grab the user settings
+				if (typeof tinyMCE !== 'undefined') {
 
-				opts.actions = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_actions') === "string" ? (tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_actions')).split(",") : "";
-				opts.baseRelPath.push(typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_assetsUrl') === "string" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_assetsUrl') : "");
-				opts.fileExts = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_fileExts') === "string" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_fileExts') : "";
-				opts.maxSize = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxSize') === "number" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxSize') : 0;
-				opts.maxWidth = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxWidth') === "number" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxWidth') : 0;
-				opts.maxHeight = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxHeight') === "number" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxHeight') : 0;
-				opts.showImgPreview = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_showImgPreview') === "boolean" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_showImgPreview') : true;
-				opts.engine = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_engine') === "string" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_engine') : "";
-				opts.handler = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_handler') === "string" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_handler') : "";
-				opts.timeOut = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_timeOut') === "number" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_timeOut') : 900; // 15 minutes
-				opts.callBack = null;
+					opts.actions = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_actions') === "string" ? (tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_actions')).split(",") : "";
+					opts.baseRelPath = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_assetsUrl') === "string" ? [tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_assetsUrl')] : [''];
+					opts.fileExts = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_fileExts') === "string" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_fileExts') : "";
+					opts.maxSize = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxSize') === "number" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxSize') : 0;
+					opts.maxWidth = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxWidth') === "number" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxWidth') : 0;
+					opts.maxHeight = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxHeight') === "number" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_maxHeight') : 0;
+					opts.showImgPreview = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_showImgPreview') === "boolean" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_showImgPreview') : true;
+					opts.engine = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_engine') === "string" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_engine') : "";
+					opts.handler = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_handler') === "string" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_handler') : "";
+					opts.timeOut = typeof tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_timeOut') === "number" ? tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_timeOut') : 900; // 15 minutes
+					opts.callBack = null;
 
-			} else if (options) {
-				// we are in stand-alone mode... extend our options with user passed settings
-				$.extend(opts, options);
-			}
+				} else if (options) {
+					// we are in stand-alone mode... extend our options with user passed settings
+					$.extend(opts, options);
+				}
 
-			// debug the init settings (if debug is turned on and console is available)
-			if (sys.debug) {
-				console.log(opts);
-			}
+				// debug the init settings (if debug is turned on and console is available)
+				if (sys.debug) {
+					console.log(opts);
+				}
 
-			// need to verify that we have valid setting values...
-			if ((typeof opts.actions !== 'object' || opts.actions.length === 0) || (typeof opts.baseRelPath !== 'object' || opts.baseRelPath.length === 0) || (typeof opts.fileExts !== 'string' || opts.fileExts.length === 0) || (typeof opts.maxSize !== 'number' || opts.maxSize === 0) || (typeof opts.maxWidth !== 'number' || opts.maxWidth === 0) || (typeof opts.maxHeight !== 'number' || opts.maxHeight === 0) || (typeof opts.showImgPreview !== 'boolean') || (typeof opts.engine !== 'string' || opts.engine === '') || (typeof opts.handler !== 'string' || opts.handler === '') || (typeof opts.timeOut !== 'number' || opts.timeOut < 0) || (typeof opts.callBack !== 'function' && opts.callBack !== null) || (typeof sys.currentUrl !== 'number' || sys.currentUrl < 0)) {
+				// need to verify that we have valid setting values...
+				if ((typeof opts.actions !== 'object' || opts.actions.length === 0) || (typeof opts.baseRelPath !== 'object' || opts.baseRelPath.length === 0) || (typeof opts.fileExts !== 'string' || opts.fileExts.length === 0) || (typeof opts.maxSize !== 'number' || opts.maxSize === 0) || (typeof opts.maxWidth !== 'number' || opts.maxWidth === 0) || (typeof opts.maxHeight !== 'number' || opts.maxHeight === 0) || (typeof opts.showImgPreview !== 'boolean') || (typeof opts.engine !== 'string' || opts.engine === '') || (typeof opts.handler !== 'string' || opts.handler === '') || (typeof opts.timeOut !== 'number' || opts.timeOut < 0) || (typeof opts.callBack !== 'function' && opts.callBack !== null) || (typeof sys.currentUrl !== 'number' || sys.currentUrl < 0)) {
 
-				// problem initializing the script
-				throw('Oops! There was a problem\n\nVariables were not initialized properly or missing values.');
+					// problem initializing the script
+					throw('Oops! There was a problem\n\nVariables were not initialized properly or missing values.');
 
-			} else {
+				} else {
 
-				// test to make sure our handler exists
-				getHandler();
+					// test to make sure our handler exists
+					getHandler();
+				}
+
 			}
 
 		}
