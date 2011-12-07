@@ -73,21 +73,21 @@
 			} else {
 
 				$('#CJFileBrowser').cjFileBrowser({
-					actions: ["navigateDirectory","createDirectory","deleteDirectory","fileDelete","fileUpload","fileSelect"],
+					actions: ["navigateDirectory","createDirectory","deleteDirectory","fileDelete","fileUpload","dropUpload","fileSelect"],
 					baseRelPath: typeof getUrlParams('baseRelPath') !== "undefined" ? [getUrlParams('baseRelPath')] : ["/"],
 					baseAbsPath: [],
 					fileExts: getUrlParams('fileExts') || "*",
 					maxSize: parseInt(getUrlParams('maxSize'), 10) || 1500,
 					maxWidth: parseInt(getUrlParams('maxWidth'), 10) || 600,
 					maxHeight: parseInt(getUrlParams('maxHeight'), 10) || 800,
-					showImgPreview: getUrlParams('showImgPreview') !== "undefined" ? Boolean(getUrlParams('showImgPreview')): true,
+					showImgPreview: getUrlParams('showImgPreview') ? Boolean(getUrlParams('showImgPreview')): true,
 					engine: "coldfusion8",
 					handler: "handler.cfc",
 					timeOut: 900, // 15 minutes
 					callBack: function(fileObj) {
 						if (typeof fileObj === "object") {
-							if (typeof parent.fileSelectCallback === "function") {
-								parent.fileSelectCallback(fileObj.DIRECTORY + fileObj.NAME);
+							if ($.isFunction(parent.fileSelectCallback)) {
+								parent.fileSelectCallback.apply(fileObj.DIRECTORY + fileObj.NAME);
 							} else {
 								throw("CJ File Browser was not setup properly. Missing fileSelectCallback function.");
 							}

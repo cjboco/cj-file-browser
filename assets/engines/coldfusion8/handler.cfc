@@ -51,7 +51,9 @@
 	<!--- a list of valid image types that can be displated in a web browser (only valid WEB IMAGES) --->
 	<cfset variables.webImgFileList = "gif,jpg,jpeg,png" />
 
-
+	<cffunction name="init" access="remote" returntype="any" output="no">
+		<cfreturn this />
+	</cffunction>
 
 
 	<!--- ------------------------------------------------------------------------
@@ -66,6 +68,7 @@
 	------------------------------------------------------------------------ --->
 	<cffunction name="isHandlerReady" access="remote" returntype="any" output="no">
 		<cfargument name="version" type="string" required="yes" />
+		<cfargument name="dirPath" type="string" required="no" default="" />
 		<cfargument name="timeOut" type="numeric" required="no" default="900" />
 		<cfset var locvar = StructNew() />
 		<cfset var result = StructNew() />
@@ -97,10 +100,21 @@
 					</cfif>
 				</cfif>
 
-				<!--- check security.xml directories --->
+				<!--- check security.xml directories (and validate inital path) --->
 				<cfset locvar.validatePath = getSecuritySettings('directories') />
 				<cfif isStruct(locvar.validatePath) and isDefined("locvar.validatePath.error") and NOT locvar.validatePath.error>
-					<!--- everything checks out --->
+					<!--- everything checks out, now validate the directory path (if provided) --->
+					<cfif Len(URLDecode(arguments.dirPath)) gt 0>
+						<cfset locvar.path = isPathValid(URLDecode(arguments.dirPath)) />
+						<cfif NOT locvar.path>
+							<cfset result.error = true />
+							<cfif isDefined("locvar.version.error_msg")>
+								<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
+							<cfelse>
+								<cfset ArrayAppend(result.msg, "Invalid path (#URLDecode(arguments.dirPath)#).") />
+							</cfif>
+						</cfif>
+					</cfif>
 				<cfelse>
 					<cfset result.error = true />
 					<cfif isDefined("locvar.version.error_msg")>
@@ -161,7 +175,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="isPathValid" access="private" returntype="boolean" output="no" hint="Validates that the given relative path is allowed within the security settings.">
+	<cffunction name="isPathValid" access="public" returntype="boolean" output="no" hint="Validates that the given relative path is allowed within the security settings.">
 		<cfargument name="baseRelPath" type="string" required="yes" />
 		<cfargument name="exact" type="boolean" required="no" default="false" />
 		<cfargument name="settings" type="any" required="no" default="" />
@@ -210,7 +224,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="isActionValid" access="private" returntype="boolean" output="no" hint="Validates that the given action is allowed within the security settings.">
+	<cffunction name="isActionValid" access="public" returntype="boolean" output="no" hint="Validates that the given action is allowed within the security settings.">
 		<cfargument name="userAction" type="string" required="yes" />
 		<cfargument name="settings" type="any" required="no" default="" />
 		<cfset var locvar = StructNew() />
@@ -249,7 +263,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="isFileExtValid" access="private" returntype="boolean" output="no" hint="Validates that the given file extension is allowed within the security settings.">
+	<cffunction name="isFileExtValid" access="public" returntype="boolean" output="no" hint="Validates that the given file extension is allowed within the security settings.">
 		<cfargument name="fileExt" type="string" required="yes" />
 		<cfargument name="settings" type="any" required="no" default="" />
 		<cfset var locvar = StructNew() />
@@ -292,7 +306,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="getSecuritySettings" access="private" returntype="any" output="no" hint="Reads the cjFileBrowser security.xml file and returns a comma seperated list of valid  directories that can be modified.">
+	<cffunction name="getSecuritySettings" access="public" returntype="any" output="no" hint="Reads the cjFileBrowser security.xml file and returns a comma seperated list of valid  directories that can be modified.">
 		<cfargument name="settingType" type="string" required="yes" />
 		<cfset var locvar = StructNew() />
 		<cfset var result = StructNew() />
@@ -847,7 +861,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="doDropUpload" access="remote" output="true" returntype="none">
+	<cffunction name="doDropUpload" access="remote" output="true" returntype="any">
 
 		<cfset var result = StructNew() />
 		<cfset var locvar = StructNew() />
@@ -861,8 +875,8 @@
 
 			<cftry>
 
-				<cfset cj.nameArr = ListToArray(safeFileNameFull(CGI.HTTP_X_FILENAME), ".") />
-				<cfset cj.paramsStr = CGI.HTTP_X_FILE_PARAMS />
+				<cfset cj.nameArr = ListToArray(safeFileNameFull(URLDecode(CGI.HTTP_X_FILENAME)), ".") />
+				<cfset cj.paramsStr = URLDecode(CGI.HTTP_X_FILE_PARAMS) />
 				<cfset cj.maxAttempts = 99 />
 
 				<!--- check the parameters --->
@@ -879,7 +893,7 @@
 					<cfif NOT isArray(cj.nameArr) or ArrayLen(cj.nameArr) neq 2>
 
 						<cfset result.error = true />
-						<cfset result.msg = "File name missing extension. (#safeFileNameFull(CGI.HTTP_X_FILENAME)#)" />
+						<cfset result.msg = "File name missing extension. (#safeFileNameFull(URLDecode(CGI.HTTP_X_FILENAME))#)" />
 
 					<cfelseif
 						NOT StructKeyExists(cj.params, "baseRelPath") or
@@ -1033,7 +1047,7 @@
 				<cfcatch type="any">
 
 					<cfset result.error = true />
-					<cfset result.msg = cfcatch />
+					<cfset result.msg = cfcatch.message />
 
 				</cfcatch>
 
@@ -1303,7 +1317,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="calcScaleInfo" access="private" returntype="struct" output="false" hint="A simple function that will return the width, height and offset of scaled image thumbnail.">
+	<cffunction name="calcScaleInfo" access="public" returntype="struct" output="false" hint="A simple function that will return the width, height and offset of scaled image thumbnail.">
 		<cfargument name="srcWidth" type="numeric" required="yes" hint="The width of the source image." />
 		<cfargument name="srcHeight" type="numeric" required="yes" hint="The height of the source image." />
 		<cfargument name="destWidth" type="numeric" required="yes" hint="The width of the destination image." />
@@ -1360,7 +1374,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="safeFileName" access="private" returntype="string" output="no" hint="Searches a string for illegal filename characters, strips them and then returns the modified string.">
+	<cffunction name="safeFileName" access="public" returntype="string" output="no" hint="Searches a string for illegal filename characters, strips them and then returns the modified string.">
 		<cfargument name="input" type="string" required="yes" />
 		<cfset var output = arguments.input />
 		<cfif Len(input) eq 0>
@@ -1380,7 +1394,7 @@
 		@return Return a boolean false = no-errors; true = error (DSJ 2010)
 		@version 1, July 28, 2005
 	----------------------------------------------------------------------------------- --->
-	<cffunction name="deleteDirectory" access="private" returntype="any" output="false">
+	<cffunction name="deleteDirectory" access="public" returntype="any" output="false">
 		<cfargument name="directory" type="string" required="yes" />
 		<cfargument name="recurse" type="boolean" required="no" default="false" />
 		<cfset var myDirectory = "" />

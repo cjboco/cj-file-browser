@@ -117,7 +117,7 @@
 				currentUrl: 0,
 				dirContents: [],
 				basePath: '/',
-				debug: true
+				debug: false
 			};
 
 
@@ -137,41 +137,45 @@
 
 		/*
 		 * Cookie plugin
-		 *
-		 * Copyright (c) 2006 Klaus Hartl (stilbuero.de)
+		 * Copyright (c) 2010 Klaus Hartl (stilbuero.de)
 		 * Dual licensed under the MIT and GPL licenses:
 		 * http://www.opensource.org/licenses/mit-license.php
 		 * http://www.gnu.org/licenses/gpl.html
+		 * http://plugins.jquery.com/files/jquery.cookie.js.txt - Modified to Pass JSLint DSJ 11/11/11
 		 */
-		$.cookie = function (name, value, options) {
-			var i, expires = '',
-				date, path, domain, secure, cookieValue, cookies, cookie;
-			if (typeof value != 'undefined') {
+		$.cookie = function(name, value, options) {
+			var expires = '',
+				cookieValue = null,
+				cookies, cookie, date, path, domain, secure, i;
+			if (typeof value != 'undefined') { // name and value given, set cookie
 				options = options || {};
 				if (value === null) {
 					value = '';
 					options.expires = -1;
 				}
-				if (options.expires && (typeof options.expires == 'number' || options.expires.toUTCString)) {
-					if (typeof options.expires == 'number') {
+				if (options.expires && (typeof options.expires === 'number' || options.expires.toUTCString)) {
+					if (typeof options.expires === 'number') {
 						date = new Date();
 						date.setTime(date.getTime() + (options.expires * 24 * 60 * 60 * 1000));
 					} else {
 						date = options.expires;
 					}
-					expires = '; expires=' + date.toUTCString();
+					expires = '; expires=' + date.toUTCString(); // use expires attribute, max-age is not supported by IE
 				}
+				// CAUTION: Needed to parenthesize options.path and options.domain
+				// in the following expressions, otherwise they evaluate to undefined
+				// in the packed version for some reason...
 				path = options.path ? '; path=' + (options.path) : '';
 				domain = options.domain ? '; domain=' + (options.domain) : '';
 				secure = options.secure ? '; secure' : '';
 				document.cookie = [name, '=', encodeURIComponent(value), expires, path, domain, secure].join('');
-			} else {
-				cookieValue = null;
+			} else { // only name given, get cookie
 				if (document.cookie && document.cookie != '') {
 					cookies = document.cookie.split(';');
 					for (i = 0; i < cookies.length; i++) {
 						cookie = $.trim(cookies[i]);
-						if (cookie.substring(0, name.length + 1) == (name + '=')) {
+						// Does this cookie string begin with the name we want?
+						if (cookie.substring(0, name.length + 1) === (name + '=')) {
 							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
 							break;
 						}
@@ -889,7 +893,8 @@
 
 		function drop(e, clb) {
 			var $trg = $(e.target),
-				dataTransfer;
+				dataTransfer,
+				prms;
 
 			dataTransfer = e.originalEvent.dataTransfer;
 			$trg.removeClass('drop_hover').addClass('drop');
@@ -900,11 +905,28 @@
 				label: 'Uploading file' + (dataTransfer.files.length > 0 ? 's' : '') + '...'
 			});
 
-			if (dataTransfer.files.length > 0) {
+			try {
+				prms = JSON.stringify(opts);
+			} catch(err) {
+				$trg.removeClass('drop_hover drop');
+				displayDialog({
+					type: 'throw',
+					state: 'show',
+					label: 'Oops! There was a problem',
+					content: 'The upload parameters could not be determined.'
+				});
+				return false;
+			}
+
+			if (sys.debug) {
+				console.log('prms', prms);
+				console.log('dataTransfer.files', dataTransfer.files);
+			}
+
+			if (prms && dataTransfer.files.length > 0) {
 
 				$.each(dataTransfer.files, function (i, file) {
-					var xhr = new XMLHttpRequest(),
-						prms = JSON.stringify(opts);
+					var xhr = new XMLHttpRequest();
 
 					if (!file) {
 
@@ -942,16 +964,19 @@
 					} else {
 
 						// do the upload
-						xhr.open('POST', 'assets/engines/' + opts.engine + '/' + opts.handler + '?method=doDropUpload&returnformat=JSON', true);
-						xhr.setRequestHeader('Content-Type', file.type);
-						xhr.setRequestHeader('X-Filename', file.name || file.fileName);
-						xhr.setRequestHeader('X-File-Params', prms);
-						xhr.onload = function() {
+						xhr.onreadystatechange = function() {
+							if (xhr.readyState === 4)  {
+								if ((xhr.status >= 200 && xhr.status <= 200) || xhr.status == 304) {
+									throw(xhr.responseText);
+								}
+							}
+						};
+						xhr.onload = function(ev) {
 							try {
 								if (sys.debug) {
-									console.log(this.responseText);
+									console.log(xhr.responseText);
 								}
-								var data = $.trim(this.responseText),
+								var data = $.trim(xhr.responseText),
 									json = JSON.parse(data);
 								if (json && typeof json.ERROR === 'boolean' && json.ERROR === false) {
 									doDirListing(function() {
@@ -987,7 +1012,8 @@
 								$trg.removeClass('drop_hover drop');
 							} catch(err) {
 								if (sys.debug) {
-									console.log(err);
+									console.log('error', err);
+									console.log('xhr.responseText', xhr.responseText);
 								}
 								$trg.removeClass('drop_hover drop');
 								displayDialog({
@@ -999,6 +1025,25 @@
 								return false;
 							}
 						};
+						xhr.error = function(ev) {
+							if (sys.debug) {
+								console.log('upload error', ev);
+							}
+							displayDialog({
+								type: 'throw',
+								state: 'show',
+								label: 'Oops! There was a problem',
+								content: 'There was a problem uploading your file' + (dataTransfer.files.length > 0 ? 's' : '') + '. Please make sure that the file format is correct.</p><p>If you continue to experience problems, please contact technical support and send them the file you are trying to upload.'
+							});
+						};
+						xhr.open(
+							'POST',
+							'assets/engines/' + opts.engine + '/' + opts.handler + '?method=doDropUpload&returnType=JSON',
+							true
+						);
+						xhr.setRequestHeader('Content-Type', file.type);
+						xhr.setRequestHeader('X-Filename', window.escape(file.name) || window.escape(file.fileName));
+						xhr.setRequestHeader('X-File-Params', window.escape(prms));
 						xhr.send(file);
 					}
 				});
@@ -1020,7 +1065,6 @@
 			} catch (ex) {}
 			if (ok && typeof json === 'object' && typeof json.ERROR === 'boolean' && !json.ERROR) {
 				doDirListing(function() {
-					console.log('hit');
 					displayDirListing();
 				});
 			} else {
@@ -1470,44 +1514,6 @@
 				});
 			});
 
-			// do we have a cookie with out last directory?
-			var c = $.cookie('cj_dir'),
-				t = '/',
-				tempBaseRef = [];
-			sys.basePath = opts.baseRelPath[0];
-			if (c !== null && typeof c === 'string' && c.length > 1 && c.indexOf(sys.basePath) > -1) {
-				c = c.substring(1, c.length - 1);
-				c = c.split('/');
-				$.each(c, function (idx, val) {
-					if (val.length > 0) {
-						t += val + '/';
-						if (t.length >= sys.basePath.length && t.indexOf(sys.basePath) > -1) {
-							tempBaseRef.push(t);
-						}
-					}
-				});
-				if (tempBaseRef.length > 0) {
-					opts.baseRelPath = tempBaseRef;
-				}
-				sys.currentUrl = opts.baseRelPath.length - 1;
-				$.cookie('cj_dir', opts.baseRelPath[sys.currentUrl], {
-					expires: 1,
-					path: sys.basePath
-				});
-			} else {
-				// no cookie, set one
-				$.cookie('cj_dir', sys.basePath, {
-					expires: 1,
-					path: sys.basePath
-				});
-			}
-
-			if (sys.debug) {
-				console.log('sys.currentUrl: ' + sys.currentUrl);
-				console.log('opts.baseRelPath: ' + opts.baseRelPath);
-				console.log('cookie: ' + $.cookie('cj_dir'));
-			}
-
 			// get directory listing
 			doDirListing(function() {
 				displayDirListing();
@@ -1516,37 +1522,57 @@
 		}
 
 		// initial test to see if our handler exists
-		function getHandler () {
-			var json;
-			json = $.parseJSON(
-			$.ajax({
-				type: 'post',
-				url: 'assets/engines/' + opts.engine + '/' + opts.handler,
-				data: {
-					method: 'isHandlerReady',
-					returnFormat: 'json',
-					timeOut: parseInt(opts.timeOut, 10),
-					version: sys.version
-				},
-				dataType: 'json',
-				async: true,
-				success: function (data) {
-					if (typeof data !== 'object' || typeof data.ERROR !== 'boolean' || data.ERROR !== false) {
+		function getHandler() {
+			var json,
+				initPath = $.cookie('cj_dir') || (opts.baseRelPath.length > 0 ? opts.baseRelPath[0] : null);
+
+			// the cookie path should never be shorter than the passed path
+			initPath = initPath.length < opts.baseRelPath[0].length ? opts.baseRelPath[0] : initPath;
+
+			if (sys.debug) {
+				console.log('initPath: ' + initPath);
+			}
+
+			if (!initPath) {
+				// if either path is invalid, then make sure the cookie get's removed.
+				$.cookie('cj_dir', null, {
+					expires: -1,
+					path: sys.basePath
+				});
+				throw('Oops! There was a problem\n\nThe initial path is not valid (' + initPath + ').');
+			} else {
+
+				json = $.parseJSON(
+				$.ajax({
+					type: 'post',
+					url: 'assets/engines/' + opts.engine + '/' + opts.handler,
+					data: {
+						method: 'isHandlerReady',
+						returnFormat: 'json',
+						dirPath: window.escape(initPath), // we can now validate the initial directory path
+						timeOut: parseInt(opts.timeOut, 10),
+						version: sys.version
+					},
+					dataType: 'json',
+					async: true,
+					success: function (data) {
+						if (typeof data !== 'object' || typeof data.ERROR !== 'boolean' || data.ERROR !== false) {
+							if (sys.debug) {
+								console.log(data);
+							}
+							throw('Oops! There was a problem\n\nThe handler engine did not respond properly during initialization.');
+						} else {
+							setup();
+						}
+					},
+					error: function (err) {
 						if (sys.debug) {
-							console.log(data);
+							console.log(err.responseText);
 						}
 						throw('Oops! There was a problem\n\nThe handler engine did not respond properly during initialization.');
-					} else {
-						setup();
 					}
-				},
-				error: function (err) {
-					if (sys.debug) {
-						console.log(err.responseText);
-					}
-					throw('Oops! There was a problem\n\nThe handler engine did not respond properly during initialization.');
-				}
-			}).responseText);
+				}).responseText);
+			}
 		}
 
 		function init() {
