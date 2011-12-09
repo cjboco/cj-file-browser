@@ -96,7 +96,7 @@
 	$.cjFileBrowser = function ($obj, options) {
 
 		var opts = {
-				actions: ["navigateDirectory","createDirectory","deleteDirectory","fileDelete","fileUpload","fileSelect"],
+				actions: ["navigateDirectory","createDirectory","deleteDirectory","fileDelete","fileUpload","dropUpload","fileSelect"],
 				baseRelPath: ["/"],
 				baseAbsPath: [],
 				fileExts: "*",
@@ -111,7 +111,7 @@
 			},
 
 			sys = {
-				version: '4.0',
+				version: '4.0.1',
 				timer: null,
 				autoCenter: null,
 				currentUrl: 0,
@@ -132,6 +132,47 @@
 				return this.length;
 			};
 		}
+
+
+
+		/*!
+		 * jQuery imagesLoaded plugin v1.0.4
+		 * http://github.com/desandro/imagesloaded
+		 *
+		 * MIT License. by Paul Irish et al.
+		 */
+		$.fn.imagesLoaded = function (callback) {
+			var $this = this,
+				$images = $this.find('img').add($this.filter('img')),
+				len = $images.length,
+				blank = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+
+			function triggerCallback() {
+				callback.call($this, $images);
+			}
+
+			function imgLoaded(event) {
+				if (--len <= 0 && event.target.src !== blank) {
+					setTimeout(triggerCallback);
+					$images.unbind('load error', imgLoaded);
+				}
+			}
+			if (!len) {
+				triggerCallback();
+			}
+			$images.bind('load error', imgLoaded).each(function () {
+				// cached images don't fire load sometimes, so we reset src.
+				if (this.complete || typeof this.complete === "undefined") {
+					var src = this.src;
+					// webkit hack from http://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
+					// data uri bypasses webkit log warning (thx doug jones)
+					this.src = blank;
+					this.src = src;
+				}
+			});
+			return $this;
+		};
+
 
 
 
@@ -439,7 +480,7 @@
 						dataType: 'json',
 						async: true,
 						success: function (data) {
-							if (typeof data !== 'object' || typeof data.ERROR !== 'boolean' || data.ERROR !== false) {
+							if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 								if (sys.debug) {
 									console.log(data);
 								}
@@ -447,12 +488,12 @@
 									type: 'throw',
 									state: 'show',
 									label: 'Oops! There was a problem',
-									content: data.MSG
+									content: data.msg
 								});
 							} else {
 								$this.find('.icon').css('background', '#fff');
-								$this.find('.icon .imgHolder').html(data.IMGSTR);
-								$this.find('.icon .imgHolder img').load(function () {
+								$this.find('.icon .imgHolder').html(data.imgStr);
+								$this.find('.icon .imgHolder img').imagesLoaded(function () {
 									$this.find('.icon .imgHolder').css('display', 'block');
 								});
 							}
@@ -513,7 +554,7 @@
 				dataType: 'json',
 				async: true,
 				success: function (data) {
-					if (typeof data !== 'object' || typeof data.ERROR !== 'boolean' || data.ERROR !== false) {
+					if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 						if (sys.debug) {
 							console.log(data);
 						}
@@ -522,11 +563,11 @@
 							type: 'throw',
 							state: 'show',
 							label: 'Oops! There was a problem',
-							content: data.MSG
+							content: data.msg
 						});
 					} else {
-						if (data.DIRLISTING.length >= 0) {
-							sys.dirContents = data.DIRLISTING;
+						if (data.dirlisting.length >= 0) {
+							sys.dirContents = data.dirlisting;
 							displayDialog({
 								type: 'progress',
 								state: 'hide'
@@ -662,6 +703,11 @@
 					if (opts.showImgPreview && (objValue.EXTENSION === 'GIF' || objValue.EXTENSION === 'JPG' || objValue.EXTENSION === 'PNG')) {
 						lib.addClass('viewable');
 					}
+
+					// parse things that should be numeric
+					objValue.WIDTH = parseInt(objValue.WIDTH, 10);
+					objValue.HEIGHT = parseInt(objValue.HEIGHT, 10);
+					objValue.SIZE = parseInt(objValue.SIZE, 10);
 
 					// create our info box
 					info = $('<div>').addClass('diritem').addClass(objValue.EXTENSION).attr('rel', objValue.NAME).append(
@@ -978,17 +1024,17 @@
 								}
 								var data = $.trim(xhr.responseText),
 									json = JSON.parse(data);
-								if (json && typeof json.ERROR === 'boolean' && json.ERROR === false) {
+								if (json && typeof json.error === 'boolean' && json.error === false) {
 									doDirListing(function() {
 										displayDirListing();
 									});
-								} else if (!json || typeof json.ERROR === 'undefined' || json.ERROR === true) {
-									if (json && json.MSG) {
+								} else if (!json || typeof json.error === 'undefined' || json.error === true) {
+									if (json && json.msg) {
 										displayDialog({
 											type: 'throw',
 											state: 'show',
 											label: 'Oops! There was a problem',
-											content: json.MSG
+											content: json.msg
 										});
 										return false;
 									} else {
@@ -1042,8 +1088,8 @@
 							true
 						);
 						xhr.setRequestHeader('Content-Type', file.type);
-						xhr.setRequestHeader('X-Filename', window.escape(file.name) || window.escape(file.fileName));
-						xhr.setRequestHeader('X-File-Params', window.escape(prms));
+						xhr.setRequestHeader('X-Filename', window.encodeURIComponent(file.name) || window.encodeURIComponent(file.fileName));
+						xhr.setRequestHeader('X-File-Params', window.encodeURIComponent(prms));
 						xhr.send(file);
 					}
 				});
@@ -1063,7 +1109,7 @@
 				json = JSON.parse(r);
 				ok = true;
 			} catch (ex) {}
-			if (ok && typeof json === 'object' && typeof json.ERROR === 'boolean' && !json.ERROR) {
+			if (ok && typeof json === 'object' && typeof json.error === 'boolean' && !json.error) {
 				doDirListing(function() {
 					displayDirListing();
 				});
@@ -1072,7 +1118,7 @@
 					type: "alert",
 					state: "show",
 					label: "Oops! There was a problem",
-					content: ok && json && json.ERROR_MSG ? json.ERROR_MSG : ''
+					content: ok && json && json.msg ? json.msg : ''
 				});
 			}
 		}
@@ -1210,7 +1256,7 @@
 									dataType: 'json',
 									async: true,
 									success: function (data) {
-										if (typeof data !== 'object' || typeof data.ERROR !== 'boolean' || data.ERROR !== false) {
+										if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 											if (sys.debug) {
 												console.log(data);
 											}
@@ -1219,7 +1265,7 @@
 												type: 'throw',
 												state: 'show',
 												label: 'Oops! There was a problem',
-												content: data.MSG
+												content: data.msg
 											});
 											$('#newfolder').attr('disabled', false);
 										} else {
@@ -1307,7 +1353,7 @@
 										dataType: 'json',
 										async: true,
 										success: function (data) {
-											if (typeof data !== 'object' || typeof data.ERROR !== 'boolean' || data.ERROR !== false) {
+											if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 												if (sys.debug) {
 													console.log(data);
 												}
@@ -1316,7 +1362,7 @@
 													type: 'throw',
 													state: 'show',
 													label: 'Oops! There was a problem',
-													content: (typeof data.MSG === 'string' && data.MSG !== '') ? data.MSG : 'Problems communicating with the CFC when attempting to delete a ' + curType.toLowerCase() + '.'
+													content: (typeof data.msg === 'string' && data.msg !== '') ? data.msg : 'Problems communicating with the CFC when attempting to delete a ' + curType.toLowerCase() + '.'
 												});
 												$('#fileDelete').attr('disabled', false);
 											} else {
@@ -1416,7 +1462,10 @@
 				$('#CJFileBrowserForm').submit(function () {
 					var $formElem = $(this),
 						ifrmName = ('uploader' + (new Date()).getTime()),
-						jFrame, base_path;
+						jFrame, base_path,
+						fn = function () {
+							jFrame.remove();
+						};
 
 					// display the progress bar...
 					displayDialog({
@@ -1439,6 +1488,9 @@
 					});
 					jFrame.load(function (objEvent) {
 						var objUploadBody = $(this).contents().find('body').html();
+						if (sys.debug) {
+							console.log(objUploadBody);
+						}
 						if ($.trim(objUploadBody) !== '') {
 							$formElem.attr({
 								action: function () {
@@ -1452,9 +1504,7 @@
 							clearTimer();
 							$('#CJFileBrowserForm').find('.hider').remove();
 							doPostEval($.trim(objUploadBody));
-							sys.timer = window.setTimeout(function () {
-								jFrame.remove();
-							}, 100);
+							sys.timer = window.setTimeout(fn, 100);
 						}
 					});
 					$('body').append(jFrame);
@@ -1474,7 +1524,7 @@
 
 					// We don't know where we are at. So we need to determine the path to do the form submit.
 					// not sure if this is elegant or a mess, but it works.
-					base_path = (document.location.href.split('?')[0]).replace(/(\/|\\)cjfilebrowser\.html/g, '');
+					base_path = (document.location.href.split('?')[0]).replace(/(\/|\\)(cjfilebrowser|index)\.html/g, '');
 					$formElem.attr({
 						action: base_path + '/assets/engines/' + opts.engine + '/' + opts.handler + '?method=doFileUpload',
 						method: 'post',
@@ -1556,7 +1606,7 @@
 					dataType: 'json',
 					async: true,
 					success: function (data) {
-						if (typeof data !== 'object' || typeof data.ERROR !== 'boolean' || data.ERROR !== false) {
+						if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 							if (sys.debug) {
 								console.log(data);
 							}

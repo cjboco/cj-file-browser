@@ -72,8 +72,8 @@
 		<cfargument name="timeOut" type="numeric" required="no" default="900" />
 		<cfset var locvar = StructNew() />
 		<cfset var result = StructNew() />
-		<cfset result.error = false />
-		<cfset result.msg = ArrayNew(1) />
+		<cfset result['error'] = false />
+		<cfset result['msg'] = ArrayNew(1) />
 		<cftry>
 			<cfif Len(arguments.version) gt 0>
 
@@ -88,15 +88,15 @@
 					<cfif isDefined("locvar.version.version") and locvar.version.version eq arguments.version>
 						<!--- everything ok --->
 					<cfelse>
-						<cfset result.error = true />
-						<cfset ArrayAppend(result.msg, "Security.xml version does not match the CJ File Browser version.") />
+						<cfset result['error'] = true />
+						<cfset ArrayAppend(result['msg'], "Security.xml version does not match the CJ File Browser version.") />
 					</cfif>
 				<cfelse>
-					<cfset result.error = true />
+					<cfset result['error'] = true />
 					<cfif isDefined("locvar.version.error_msg")>
-						<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
+						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result.msg, "Problems checking security.xml version.") />
+						<cfset ArrayAppend(result['msg'], "Problems checking security.xml version.") />
 					</cfif>
 				</cfif>
 
@@ -107,20 +107,20 @@
 					<cfif Len(URLDecode(arguments.dirPath)) gt 0>
 						<cfset locvar.path = isPathValid(URLDecode(arguments.dirPath)) />
 						<cfif NOT locvar.path>
-							<cfset result.error = true />
+							<cfset result['error'] = true />
 							<cfif isDefined("locvar.version.error_msg")>
-								<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
+								<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
 							<cfelse>
-								<cfset ArrayAppend(result.msg, "Invalid path (#URLDecode(arguments.dirPath)#).") />
+								<cfset ArrayAppend(result['msg'], "Invalid path (#URLDecode(arguments.dirPath)#).") />
 							</cfif>
 						</cfif>
 					</cfif>
 				<cfelse>
-					<cfset result.error = true />
+					<cfset result['error'] = true />
 					<cfif isDefined("locvar.version.error_msg")>
-						<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
+						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result.msg, "Problems checking security.xml authorized directories.") />
+						<cfset ArrayAppend(result['msg'], "Problems checking security.xml authorized directories.") />
 					</cfif>
 				</cfif>
 
@@ -129,11 +129,11 @@
 				<cfif isStruct(locvar.validateAction) and isDefined("locvar.validateAction.error") and NOT locvar.validateAction.error>
 					<!--- everything checks out --->
 				<cfelse>
-					<cfset result.error = true />
+					<cfset result['error'] = true />
 					<cfif isDefined("locvar.version.error_msg")>
-						<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
+						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result.msg, "Problems checking security.xml authorized actions.") />
+						<cfset ArrayAppend(result['msg'], "Problems checking security.xml authorized actions.") />
 					</cfif>
 				</cfif>
 
@@ -142,24 +142,24 @@
 				<cfif isStruct(locvar.isFileExtValid) and isDefined("locvar.isFileExtValid.error") and NOT locvar.isFileExtValid.error>
 					<!--- everything checks out --->
 				<cfelse>
-					<cfset result.error = true />
+					<cfset result['error'] = true />
 					<cfif isDefined("locvar.version.error_msg")>
-						<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
+						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result.msg, "Problems checking security.xml authorized file extensions.") />
+						<cfset ArrayAppend(result['msg'], "Problems checking security.xml authorized file extensions.") />
 					</cfif>
 				</cfif>
 
 			<!--- we weren't passed the version --->
 			<cfelse>
 
-				<cfset result.error = true />
-				<cfset ArrayAppend(result.msg, "Version information not provided.") />
+				<cfset result['error'] = true />
+				<cfset ArrayAppend(result['msg'], "Version information not provided.") />
 
 			</cfif>
 			<cfcatch type="any">
-				<cfset result.error = true />
-				<cfset ArrayAppend(result.msg, cfcatch.message) />
+				<cfset result['error'] = true />
+				<cfset ArrayAppend(result['msg'], cfcatch.message) />
 			</cfcatch>
 		</cftry>
 		<cfreturn result />
@@ -310,8 +310,8 @@
 		<cfargument name="settingType" type="string" required="yes" />
 		<cfset var locvar = StructNew() />
 		<cfset var result = StructNew() />
-		<cfset result.error = false />
-		<cfset result.msg = "" />
+		<cfset result['error'] = false />
+		<cfset result['msg'] = "" />
 		<cftry>
 
 			<!--- called from assets/engines/ENGINE folder --->
@@ -342,15 +342,15 @@
 							</cfloop>
 							<!--- they may have provided blank entries, this is not allowed --->
 							<cfif ListLen(locvar.dirListRel) gt 0>
-								<cfset result.error = false />
-								<cfset result.dirListRel = locvar.dirListRel />
+								<cfset result['error'] = false />
+								<cfset result['dirListRel'] = locvar.dirListRel />
 							<cfelse>
-								<cfset result.error = true />
-								<cfset result.msg = "There are no authorized directories set in the security.xml file. (Cannot be blank)" />
+								<cfset result['error'] = true />
+								<cfset result['msg'] = "There are no authorized directories set in the security.xml file. (Cannot be blank)" />
 							</cfif>
 						<cfelse>
-							<cfset result.error = true />
-							<cfset result.msg = "There are no authorized directories set in the security.xml file. (Cannot be blank)" />
+							<cfset result['error'] = true />
+							<cfset result['msg'] = "There are no authorized directories set in the security.xml file. (Cannot be blank)" />
 						</cfif>
 
 					<!--- security actions --->
@@ -366,15 +366,15 @@
 							</cfloop>
 							<!--- they may have provided blank entries, this is not allowed --->
 							<cfif ListLen(locvar.actionList) gt 0>
-								<cfset result.error = false />
-								<cfset result.actionList = locvar.actionList />
+								<cfset result['error'] = false />
+								<cfset result['actionList'] = locvar.actionList />
 							<cfelse>
-								<cfset result.error = true />
-								<cfset result.msg = "There are no authorized actions set in the security.xml file. (No settings will not allow any action)" />
+								<cfset result['error'] = true />
+								<cfset result['msg'] = "There are no authorized actions set in the security.xml file. (No settings will not allow any action)" />
 							</cfif>
 						<cfelse>
-							<cfset result.error = true />
-							<cfset result.msg = "There are no authorized actions set in the security.xml file. (No settings will not allow any action)" />
+							<cfset result['error'] = true />
+							<cfset result['msg'] = "There are no authorized actions set in the security.xml file. (No settings will not allow any action)" />
 						</cfif>
 
 
@@ -392,48 +392,48 @@
 							<!--- remove any spaced between the list items ", " or " ," --->
 							<cfset locvar.extList = ReReplace(locvar.extList, "[\s]*,[\s]*",",","ALL") />
 							<cfif ListLen(locvar.extList) gt 0>
-								<cfset result.error = false />
-								<cfset result.extList = locvar.extList />
+								<cfset result['error'] = false />
+								<cfset result['extList'] = locvar.extList />
 							<cfelse>
-								<cfset result.error = true />
-								<cfset result.msg = "There are no authorized file extensions set in the security.xml file. (Cannot be blank)" />
+								<cfset result['error'] = true />
+								<cfset result['msg'] = "There are no authorized file extensions set in the security.xml file. (Cannot be blank)" />
 							</cfif>
 						<cfelse>
-							<cfset result.error = true />
-							<cfset result.msg = "There are no authorized file extensions set in the security.xml file. (Cannot be blank)" />
+							<cfset result['error'] = true />
+							<cfset result['msg'] = "There are no authorized file extensions set in the security.xml file. (Cannot be blank)" />
 						</cfif>
 
 					<!--- security file extensions --->
 					<cfelseif arguments.settingType eq "version">
 
-						<cfset result.error = false />
-						<cfset result.version = locvar.xml.cjFileBrowser.XmlAttributes.version />
+						<cfset result['error'] = false />
+						<cfset result['version'] = locvar.xml.cjFileBrowser.XmlAttributes.version />
 
 					<!--- unnknown security parameter --->
 					<cfelse>
 
-						<cfset result.error = true />
-						<cfset result.msg = "Unknown security parameter check." />
+						<cfset result['error'] = true />
+						<cfset result['msg'] = "Unknown security parameter check." />
 
 					</cfif>
 
 				<!--- not XML --->
 				<cfelse>
 
-					<cfset result.error = true />
-					<cfset result.msg = "Problems reading in the security settings." />
+					<cfset result['error'] = true />
+					<cfset result['msg'] = "Problems reading in the security settings." />
 
 				</cfif>
 
 			<cfelse>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Security.xml file could not be found." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Security.xml file could not be found." />
 
 			</cfif>
 			<cfcatch type="any">
-				<cfset result.error = true />
-				<cfset result.msg = cfcatch.message />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = cfcatch.message />
 			</cfcatch>
 		</cftry>
 		<cfreturn result />
@@ -472,19 +472,19 @@
 			<!--- validate "navigateDirectory" action and path --->
 			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory access denied." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory access denied." />
 
 			<!--- validate that the "baseRelPath" exists --->
 			<cfelseif NOT DirectoryExists(ExpandPath(locvar.baseRelPath))>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory does not exist." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory does not exist." />
 
 			<cfelse>
 
-				<cfset result.error = false />
-				<cfset result.msg = "" />
+				<cfset result['error'] = false />
+				<cfset result['msg'] = "" />
 				<cfset locvar.absBaseUrl = ExpandPath(locvar.baseRelPath) />
 				<cfset locvar.dir = ArrayNew(1) />
 
@@ -539,19 +539,19 @@
 							</cfif>
 						</cfloop>
 					</cfif>
-					<cfset result.dirlisting = locvar.dir />
+					<cfset result['dirlisting'] = locvar.dir />
 
 				<cfelse>
 
 					<!--- if no contents, then return an empty array --->
-					<cfset result.dirlisting = ArrayNew(1) />
+					<cfset result['dirlisting'] = ArrayNew(1) />
 
 				</cfif>
 
 			</cfif>
 			<cfcatch type="any">
-				<cfset result.error = true />
-				<cfset result.msg = cfcatch.message />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = cfcatch.message />
 			</cfcatch>
 		</cftry>
 		<cfreturn result />
@@ -590,49 +590,49 @@
 			<!--- validate "navigateDirectory" action and path --->
 			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory access denied." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory access denied." />
 
 			<!--- validate action --->
 			<cfelseif NOT isActionValid("filePreviews",locvar.authActions)>
 
-				<cfset result.error = true />
-				<cfset result.msg = 'Image previews are not allowed.' />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = 'Image previews are not allowed.' />
 
 			<!--- validate that the "baseRelPath" exists --->
 			<cfelseif NOT DirectoryExists(ExpandPath(locvar.baseRelPath))>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory does not exist." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory does not exist." />
 
 			<cfelse>
 
 				<cfset locvar.absFilePath = ExpandPath(locvar.baseRelPath & arguments.fileName) />
-				<cfset result.error = false />
-				<cfset result.msg = "" />
-				<cfset result.elemID = arguments.elemID />
-				<cfset result.imgStr = "" />
+				<cfset result['error'] = false />
+				<cfset result['msg'] = "" />
+				<cfset result['elemID'] = arguments.elemID />
+				<cfset result['imgStr'] = "" />
 				<cfif FileExists(locvar.absFilePath)>
 					<cfimage action="read" name="locvar.img_input" source="#locvar.absFilePath#" />
 					<cfif locvar.img_input["width"] gt variables.thumb_width or locvar.img_input["height"] gt variables.thumb_height>
-						<cfset locvar.img_info = calcScaleInfo(locvar.img_input["width"], locvar.img_input["height"], variables.thumb_width, variables.thumb_height, "fit")>
-						<cfset result.imgStr = '<img src="#locvar.baseRelPath##arguments.fileName#" border="0" width="#locvar.img_info.width#" height="#locvar.img_info.height#" style="margin-top:#locvar.img_info.offset.y#px;margin-left:#locvar.img_info.offset.x#px;" />' />
+						<cfset locvar.imgInfo = calcScaleInfo(locvar.img_input["width"], locvar.img_input["height"], variables.thumb_width, variables.thumb_height, "fit")>
+						<cfset result['imgStr'] = '<img src="#locvar.baseRelPath##arguments.fileName#" border="0" width="#locvar.imgInfo.width#" height="#locvar.imgInfo.height#" style="margin-top:#locvar.imgInfo.offset.y#px;margin-left:#locvar.imgInfo.offset.x#px;" />' />
 					<cfelse>
-						<cfset locvar.img_info.offset = StructNew() />
-						<cfset locvar.img_info.offset.x = Int((variables.thumb_width / 2) - (locvar.img_input["width"] / 2)) />
-						<cfset locvar.img_info.offset.y = Int((variables.thumb_height / 2) - (locvar.img_input["height"] / 2)) />
-						<cfset result.imgStr = '<img src="#locvar.baseRelPath##arguments.fileName#" border="0" width="#locvar.img_input["width"]#" height="#locvar.img_input["height"]#" style="margin-top:#locvar.img_info.offset.y#px;margin-left:#locvar.img_info.offset.x#px;" />' />
+						<cfset locvar.imgInfo.offset = StructNew() />
+						<cfset locvar.imgInfo.offset.x = Int((variables.thumb_width / 2) - (locvar.img_input["width"] / 2)) />
+						<cfset locvar.imgInfo.offset.y = Int((variables.thumb_height / 2) - (locvar.img_input["height"] / 2)) />
+						<cfset result['imgStr'] = '<img src="#locvar.baseRelPath##arguments.fileName#" border="0" width="#locvar.img_input["width"]#" height="#locvar.img_input["height"]#" style="margin-top:#locvar.imgInfo.offset.y#px;margin-left:#locvar.imgInfo.offset.x#px;" />' />
 					</cfif>
 				<cfelse>
-					<cfset result.error = true />
-					<cfset result.msg = "Problems reading image thumbnail. Invalid path. (#locvar.absFilePath#)" />
+					<cfset result['error'] = true />
+					<cfset result['msg'] = "Problems reading image thumbnail. Invalid path. (#locvar.absFilePath#)" />
 				</cfif>
 
 			</cfif>
 			<cfcatch type="any">
 
-				<cfset result.error = true />
-				<cfset result.msg = "Problems reading image thumbnail. (#cfcatch.message#)" />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Problems reading image thumbnail. (#cfcatch.message#)" />
 
 			</cfcatch>
 		</cftry>
@@ -648,40 +648,40 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="doFileUpload" access="remote" output="true" returntype="none">
+	<cffunction name="doFileUpload" access="remote" output="true" returntype="any">
 		<cfset var locvar = StructNew() />
 		<cfset var result = StructNew() />
-		<cfset result.error = false />
-		<cfset result.error_msg = ArrayNew(1) />
+		<cfset result['error'] = false />
+		<cfset result['msg'] = ArrayNew(1) />
 		<cftry>
 
 			<!--- make sure this is a post operation --->
 			<cfif cgi.request_method neq "post">
 
-				<cfset result.error = true />
-				<cfset result.error_msg = "HTTP request method not allowed." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "HTTP request method not allowed." />
 
 			<!--- double check we have all our variables --->
 			<cfelseif
-				NOT StructKeyExists(form,"baseUrl") or
-				NOT StructKeyExists(form,"maxWidth") or
-				NOT StructKeyExists(form,"maxHeight") or
-				NOT StructKeyExists(form,"maxSize") or
-				NOT StructKeyExists(form,"fileExts") or
-				NOT StructKeyExists(form,"fileUploadField") or
-				NOT StructKeyExists(form,"timeOut")>
+				NOT StructKeyExists(arguments,"baseUrl") or
+				NOT StructKeyExists(arguments,"maxWidth") or
+				NOT StructKeyExists(arguments,"maxHeight") or
+				NOT StructKeyExists(arguments,"maxSize") or
+				NOT StructKeyExists(arguments,"fileExts") or
+				NOT StructKeyExists(arguments,"fileUploadField") or
+				NOT StructKeyExists(arguments,"timeOut")>
 
-				<cfset result.error = true />
-				<cfset result.error_msg = "Could not complete upload. Required form variables missing." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Could not complete upload. Required form variables missing." />
 
 			<cfelse>
 
-				<cfset locvar.baseUrl = URLDecode(form.baseUrl) />
-				<cfset locvar.fileExts = URLDecode(form.fileExts) />
+				<cfset locvar.baseUrl = URLDecode(arguments.baseUrl) />
+				<cfset locvar.fileExts = URLDecode(arguments.fileExts) />
 
 				<!--- check to see if they passed a timout value --->
-				<cfif StructKeyExists(form, "timeOut") and isNumeric(form.timeOut) and form.timeOut gt 0>
-					<cfsetting requestTimeout="#form.timeOut#" />
+				<cfif StructKeyExists(arguments, "timeOut") and isNumeric(arguments.timeOut) and arguments.timeOut gt 0>
+					<cfsetting requestTimeout="#arguments.timeOut#" />
 				</cfif>
 
 				<!--- preload our security settings (since we have to read this in each time) --->
@@ -692,69 +692,67 @@
 					We can check the file size in the temp folder! Thanks Dave (aka Mister Dai)
 					http://misterdai.wordpress.com/2010/02/26/upload-size-before-cffile-upload/
 				--->
-				<cfset locvar.fileSize = GetFileInfo(GetTempDirectory() & GetFileFromPath(form.fileUploadField)) />
+				<cfset locvar.fileSize = GetFileInfo(GetTempDirectory() & GetFileFromPath(arguments.fileUploadField)) />
 
 				<!--- validate "navigateDirectory" action and path --->
 				<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseUrl,true,locvar.authDirs)) or NOT isPathValid(locvar.baseUrl,false,locvar.authDirs)>
 
-					<cfset result.error = true />
-					<cfset result.error_msg = "Directory access denied." />
+					<cfset result['error'] = true />
+					<cfset result['msg'] = "Directory access denied." />
 
 				<!--- validate action --->
 				<cfelseif NOT isActionValid("fileUpload",locvar.authActions)>
 
-					<cfset result.error = true />
-					<cfset result.error_msg = "Not authorized to upload files." />
+					<cfset result['error'] = true />
+					<cfset result['msg'] = "Not authorized to upload files." />
 
 				<!--- validate that the "baseUrl" exists --->
 				<cfelseif NOT DirectoryExists(ExpandPath(locvar.baseUrl))>
 
-					<cfset result.error = true />
-					<cfset result.error_msg = "Directory does not exist." />
+					<cfset result['error'] = true />
+					<cfset result['msg'] = "Directory does not exist." />
 
-				<cfelseif isDefined("locvar.fileSize.size") and locvar.fileSize.size gt (form.maxSize * 1024)>
+				<cfelseif isDefined("locvar.fileSize.size") and locvar.fileSize.size gt (arguments.maxSize * 1024)>
 
-					<cfset result.error = true />
-					<cfset ArrayAppend(result.error_msg, "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(form.maxSize,'9,999')#KB.")>
+					<cfset result['error'] = true />
+					<cfset ArrayAppend(result['msg'], "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(arguments.maxSize,'9,999')#KB.")>
 
 				<cfelse>
 
-					<!--- <cfset form = form /> --->
-
 					<!--- validate that we have the proper form fields --->
 					<cfif NOT DirectoryExists(ExpandPath(locvar.baseUrl))>
-						<cfset result.error = true />
-						<cfset ArrayAppend(result.error_msg, "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
+						<cfset result['error'] = true />
+						<cfset ArrayAppend(result['msg'], "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
 					</cfif>
-					<cfif NOT isDefined("form.baseUrl") or (isDefined("form.baseUrl") and (Len(form.baseUrl) eq 0 or ReFind("[^a-zA-Z0-9\,\$\-\_\.\+\!\*\'\(\)\/]+",locvar.baseUrl) gt 0))>
-						<cfset result.error = true />
-						<cfset ArrayAppend(result.error_msg, "Variable BASEURL not defined or invalid data.") />
+					<cfif NOT isDefined("arguments.baseUrl") or (isDefined("arguments.baseUrl") and (Len(arguments.baseUrl) eq 0 or ReFind("[^a-zA-Z0-9\,\$\-\_\.\+\!\*\'\(\)\/]+",locvar.baseUrl) gt 0))>
+						<cfset result['error'] = true />
+						<cfset ArrayAppend(result['msg'], "Variable BASEURL not defined or invalid data.") />
 					</cfif>
 					<cfif NOT isDefined("locvar.fileExts") or (isDefined("locvar.fileExts") and locvar.fileExts neq "*" and ReFind("[^a-zA-Z0-9\,]+", locvar.fileExts) gt 0)>
-						<cfset result.error = true />
-						<cfset ArrayAppend(result.error_msg, "Variable FILEEXTS not defined or invalid data.") />
+						<cfset result['error'] = true />
+						<cfset ArrayAppend(result['msg'], "Variable FILEEXTS not defined or invalid data.") />
 					<cfelse>
 						<!--- remove any spaced between the list items ", " or " ," --->
 						<cfset locvar.fileExts = ReReplace(locvar.fileExts, "[\s]*,[\s]*",",","ALL") />
 					</cfif>
-					<cfif NOT isNumeric(form.maxSize) or (isNumeric(form.maxSize) and (form.maxSize lt 1 or form.maxSize gt 9999999))>
-						<cfset result.error = true />
-						<cfset ArrayAppend(result.error_msg, "Variable MAXSIZE not defined or invalid data.") />
+					<cfif NOT isNumeric(arguments.maxSize) or (isNumeric(arguments.maxSize) and (arguments.maxSize lt 1 or arguments.maxSize gt 9999999))>
+						<cfset result['error'] = true />
+						<cfset ArrayAppend(result['msg'], "Variable MAXSIZE not defined or invalid data.") />
 					</cfif>
-					<cfif NOT isNumeric(form.maxWidth) or (isNumeric(form.maxWidth) and (form.maxWidth lt 1 or form.maxSize gt 9999999))>
-						<cfset result.error = true />
-						<cfset ArrayAppend(result.error_msg, "Variable MAXWIDTH not defined or invalid data.") />
+					<cfif NOT isNumeric(arguments.maxWidth) or (isNumeric(arguments.maxWidth) and (arguments.maxWidth lt 1 or arguments.maxSize gt 9999999))>
+						<cfset result['error'] = true />
+						<cfset ArrayAppend(result['msg'], "Variable MAXWIDTH not defined or invalid data.") />
 					</cfif>
-					<cfif NOT isNumeric(form.maxHeight) or (isNumeric(form.maxHeight) and (form.maxHeight lt 1 or form.maxHeight gt 9999999))>
-						<cfset result.error = true />
-						<cfset ArrayAppend(result.error_msg, "Variable MAXHEIGHT not defined or invalid data.") />
+					<cfif NOT isNumeric(arguments.maxHeight) or (isNumeric(arguments.maxHeight) and (arguments.maxHeight lt 1 or arguments.maxHeight gt 9999999))>
+						<cfset result['error'] = true />
+						<cfset ArrayAppend(result['msg'], "Variable MAXHEIGHT not defined or invalid data.") />
 					</cfif>
-					<cfif NOT isDefined("form.fileUploadField") or (isDefined("form.fileUploadField") and Len(URLDecode(form.fileUploadField)) eq 0)>
-						<cfset result.error = true />
-						<cfset ArrayAppend(result.error_msg, "FILE INPUT FILED not defined or invalid data.") />
+					<cfif NOT isDefined("arguments.fileUploadField") or (isDefined("arguments.fileUploadField") and Len(URLDecode(arguments.fileUploadField)) eq 0)>
+						<cfset result['error'] = true />
+						<cfset ArrayAppend(result['msg'], "FILE INPUT FILED not defined or invalid data.") />
 					</cfif>
 
-					<cfif NOT result.error and ArrayLen(result.error_msg) eq 0>
+					<cfif NOT result['error'] and ArrayLen(result['msg']) eq 0>
 
 						<!---
 							File Upload Notes:
@@ -764,10 +762,9 @@
 
 						<!--- upload the file --->
 						<cffile action="upload" filefield="fileUploadField" destination="#ExpandPath(locvar.baseUrl)#" nameconflict="makeunique" />
-						<cfset sleep(25) >
 
 						<!--- if the file uploaded, then continue --->
-						<cfif cffile.filewassaved eq "Yes" and cffile.fileSize lte (form.maxSize * 1024)>
+						<cfif cffile.filewassaved eq "Yes" and cffile.fileSize lte (arguments.maxSize * 1024)>
 
 							<!--- make sure that the uploaded file has the correct file extension (This still doesn't mean it VALID! --->
 							<cfif isFileExtValid(cffile.serverFileExt, locvar.authExts) and (locvar.fileExts eq "*" or (locvar.fileExts neq "*" and ListFindNoCase(locvar.fileExts, cffile.serverFileExt) gt 0))>
@@ -775,67 +772,80 @@
 								<!---
 									check file name and move out of temp directory
 								—————————————————————————————————————————————————————————————————————————————————————— --->
-								<cfset locvar.file_name = safeFileName(cffile.serverFileName) & "." & LCase(cffile.serverFileExt) />
-								<cfset locvar.orig_path_name = Replace(cffile.ServerDirectory, '\', '/', 'ALL') & "/" & cffile.ServerFile />
-								<cfset locvar.new_path_name = ExpandPath(Replace(locvar.baseUrl, '\', '/', 'ALL') & locvar.file_name) />
+								<cfset locvar.newFileName = safeFileNameFull(cffile.serverFileName) & "." & LCase(cffile.serverFileExt) />
+								<cfset locvar.serverFilePath = Replace(cffile.ServerDirectory, '\', '/', 'ALL') & "/" & cffile.ServerFile />
+								<cfset locvar.newFilePath = ExpandPath(Replace(locvar.baseUrl, '\', '/', 'ALL') & locvar.newFileName) />
 
-								<!--- CHECK TO SEE IF THE WAS AN IMAGE BEFORE WE SCALE IT --->
-								<!--- We could use isImageFile(), but if CF8 is missing an update it could crash the server. --->
-								<cfif ListFindNoCase(variables.webImgFileList, cffile.serverFileExt) gt 0 and isNumeric(form.maxWidth) and isNumeric(form.maxHeight)>
+								<!---
+								 | CHECK TO SEE IF THE WAS AN IMAGE BEFORE WE SCALE IT
+								 | *using isImageFile() might crash, but only if CF8 is missing an update it could crash the server.
+								--->
+								<cfif server.coldfusion.productname eq "Railo" or ListGetAt(server.coldfusion.productversion, 1) gt 8>
+									<cfset locvar.isImg = isImageFile(ExpandPath('#locvar.serverFilePath#')) />
+								<cfelse>
+									<cfif ListFindNoCase(variables.webImgFileList, LCase(cffile.serverFileExt)) gt 0>
+										<cfset locvar.isImg = true />
+									<cfelse>
+										<cfset locvar.isImg = false />
+									</cfif>
+								</cfif>
+
+								<cfif locvar.isImg and isNumeric(arguments.maxWidth) and isNumeric(arguments.maxHeight)>
 									<!---
 										resize the image if it's to big
 									—————————————————————————————————————————————————————————————————————————————————————— --->
-									<cfimage action="read" name="locvar.temp_file" source="#locvar.new_path_name#" />
-									<cfif locvar.temp_file["width"] gt form.maxWidth or locvar.temp_file["height"] gt form.maxHeight>
-										<cfset ImageSetAntialiasing(locvar.temp_file, "on") />
-										<cfset locvar.img_info = calcScaleInfo(locvar.temp_file["width"], locvar.temp_file["height"], form.maxWidth, form.maxHeight, "fit") />
-										<cfset ImageScaleToFit(locvar.temp_file, locvar.img_info.width, locvar.img_info.height, "highestQuality", "1") />
-										<cfimage action="write" source="#locvar.temp_file#" destination="#locvar.new_path_name#" overwrite="yes" />
+									<cfimage action="read" name="locvar.imgFile" source="#locvar.newFilePath#" />
+									<cfif locvar.imgFile["width"] gt arguments.maxWidth or locvar.imgFile["height"] gt arguments.maxHeight>
+										<cfset ImageSetAntialiasing(locvar.imgFile, "on") />
+										<cfset locvar.imgInfo = calcScaleInfo(locvar.imgFile["width"], locvar.imgFile["height"], arguments.maxWidth, arguments.maxHeight, "fit") />
+										<cfset ImageScaleToFit(locvar.imgFile, locvar.imgInfo.width, locvar.imgInfo.height, "highestQuality", "1") />
+										<cfimage action="write" source="#locvar.imgFile#" destination="#locvar.newFilePath#" overwrite="yes" />
 									</cfif>
 
 								<cfelse>
 
-									<!--- ARgh!!!@#!@# Railo is having issues with renaming. Keep getting File or Directory not found. --->
-									<cffile action="rename" source="#locvar.orig_path_name#" destination="#locvar.new_path_name#" nameconflict="overwrite" />
+									<!--- ARgh!!!@#!@# Railo is having issues with renaming as of versiokn 3.3.1.000. Keep getting File or Directory not found. --->
+									<cfif server.coldfusion.productname neq "Railo" or (server.coldfusion.productname eq "Railo" and server.railo.version neq "3.3.1.000")>
+										<cffile action="rename" source="#locvar.serverFilePath#" destination="#locvar.newFilePath#" nameconflict="overwrite" />
+									</cfif>
 
 								</cfif>
 
 							<!--- not a valid file extension --->
 							<cfelse>
 
-								<cfset result.error = true />
-								<cfset ArrayAppend(result.error_msg, "You are not allowed to upload #UCase(cffile.serverFileExt)# files.") />
+								<cfset result['error'] = true />
+								<cfset ArrayAppend(result['msg'], "You are not allowed to upload #UCase(cffile.serverFileExt)# files.") />
 
 								<!--- delete the file --->
 								<cffile action="delete" file="#ExpandPath('#locvar.baseUrl##cffile.ServerFile#')#" />
 
 							</cfif>
 
-						<cfelseif cffile.filewassaved eq "Yes" and cffile.fileSize gt (form.maxSize * 1024)>
+						<cfelseif cffile.filewassaved eq "Yes" and cffile.fileSize gt (arguments.maxSize * 1024)>
 							<!--- file is too big --->
 							<cfif FileExists(ExpandPath('#locvar.baseUrl##cffile.ServerFile#'))>
 								<cffile action="delete" file="#ExpandPath('#locvar.baseUrl##cffile.ServerFile#')#" />
 							</cfif>
-							<cfset result.error = true />
-							<cfset ArrayAppend(result.error_msg, "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(form.maxSize,'9,999')#KB.")>
+							<cfset result['error'] = true />
+							<cfset ArrayAppend(result['msg'], "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(arguments.maxSize,'9,999')#KB.")>
 						<cfelse>
 							<!--- cffile.filewassaved = "no" --->
-							<cfset result.error = true />
-							<cfset ArrayAppend(result.error_msg, "Problems encountered uploading the file.")>
+							<cfset result['error'] = true />
+							<cfset ArrayAppend(result['msg'], "Problems encountered uploading the file.")>
 						</cfif>
 
 					<cfelse>
-						<!--- ArrayLen(result.error_msg) > 0 --->
-						<cfset result.error = true />
-						<cfset result.error_msg = result.error_msg />
+						<!--- ArrayLen(result['msg']) > 0 --->
+						<cfset result['error'] = true />
 					</cfif>
 
 				</cfif>
 			</cfif>
 
 			<cfcatch type="any">
-				<cfset result.error = true />
-				<cfset result.error_msg = cfcatch.message />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = cfcatch.message />
 			</cfcatch>
 		</cftry>
 
@@ -855,66 +865,66 @@
 
 	<!--- ------------------------------------------------------------------------
 
-		doDropUpload - Uploads a file to the server (Handles a form POST operation)
+		doDropUpload - Uploads a file that was "dropped" on the window.
 
 		Author: Doug Jones
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="doDropUpload" access="remote" output="true" returntype="any">
+	<cffunction name="doDropUpload" access="remote" output="true" returntype="any" returnformat="json">
 
 		<cfset var result = StructNew() />
 		<cfset var locvar = StructNew() />
-		<cfset var cj = StructNew() />
-		<cfset var thread = "" />
 
-		<cfset result.error = false />
-		<cfset result.msg = "" />
+			<cfset var cj = StructNew() />
 
-		<cfif cgi.request_method eq "put" or cgi.request_method eq "post">
+			<cfset result['error'] = false />
+			<cfset result['msg'] = "" />
 
 			<cftry>
 
-				<cfset cj.nameArr = ListToArray(safeFileNameFull(URLDecode(CGI.HTTP_X_FILENAME)), ".") />
-				<cfset cj.paramsStr = URLDecode(CGI.HTTP_X_FILE_PARAMS) />
-				<cfset cj.maxAttempts = 99 />
+				<cfset locvar.requestData = GetHttpRequestData() />
+				<cfset cj.origFilename = LCase(URLDecode(cgi.http_x_filename)) />
 
-				<!--- check the parameters --->
-				<cfif Len(cj.paramsStr) eq 0 or NOT isJSON(cj.paramsStr)>
+				<cfset cj.nameArr = ListToArray(cj.origFilename, ".") />
+				<cfset cj.paramsStr = URLDecode(cgi.http_x_file_params) />
 
-					<cfset result.error = true />
-					<cfset result.msg = "Invalid file parameters." />
-
+				<!--- first check the passed parameters --->
+				<cfif Len(cj.paramsStr) eq 0 or NOT isJson(cj.paramsStr)>
+					<cfset result['error'] = true />
+					<cfset result['msg'] = "Could not complete upload. Invalid parameters." />
 				<cfelse>
-
 					<cfset cj.params = DeSerializeJSON(cj.paramsStr) />
-
-					<!--- check the file name array --->
-					<cfif NOT isArray(cj.nameArr) or ArrayLen(cj.nameArr) neq 2>
-
-						<cfset result.error = true />
-						<cfset result.msg = "File name missing extension. (#safeFileNameFull(URLDecode(CGI.HTTP_X_FILENAME))#)" />
-
-					<cfelseif
+					<cfif
 						NOT StructKeyExists(cj.params, "baseRelPath") or
 						NOT StructKeyExists(cj.params, "maxWidth") or
 						NOT StructKeyExists(cj.params, "maxHeight") or
 						NOT StructKeyExists(cj.params, "maxSize") or
 						NOT StructKeyExists(cj.params, "fileExts") or
 						NOT StructKeyExists(cj.params, "timeOut")>
+							<cfset result['error'] = true />
+							<cfset result['msg'] = "Could not complete upload. Required parameters missing." />
+					</cfif>
+				</cfif>
 
-						<cfset result.error = true />
-						<cfset result.msg = "Could not complete upload. Required parameters missing." />
+				<cfif NOT result['error']>
+
+					<cfif ArrayLen(cj.nameArr) neq 2>
+
+						<cfset result['error'] = true />
+						<cfset result['msg'] = "File name missing extension. (#cj.origFilename#)" />
+
+					<cfelseif Len(locvar.requestData.content) eq 0>
+
+						<cfset result['error'] = true />
+						<cfset result['msg'] = "No XHR content was passed. (doDropUpload)" />
 
 					<cfelse>
 
-						<cfset cj.baseRelPath = URLDecode(cj.params.baseRelPath[ArrayLen(cj.params.baseRelPath)]) />
-
-						<cfset cj.origFileName = cj.nameArr[1] />
-						<cfset cj.fileName = cj.origFileName />
+						<!--- set up some initial values --->
+						<cfset cj.baseRelPath = Replace(URLDecode(cj.params.baseRelPath[ArrayLen(cj.params.baseRelPath)]), '\', '/', 'ALL') />
+						<cfset cj.fileName = safeFileNameFull(cj.nameArr[1]) />
 						<cfset cj.fileExt = cj.nameArr[2] />
-						<cfset cj.attempts = 0 />
-
 
 						<!--- check to see if they passed a timout value --->
 						<cfif StructKeyExists(cj.params, "timeOut") and isNumeric(cj.params.timeOut) and cj.params.timeOut gt 0>
@@ -926,115 +936,104 @@
 						<cfset locvar.authActions = getSecuritySettings('actions') />
 						<cfset locvar.authExts = getSecuritySettings('fileExts') />
 
-
 						<!--- validate "navigateDirectory" action and path --->
 						<cfif (NOT isActionValid("navigateDirectory", locvar.authActions) and NOT isPathValid(cj.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(cj.baseRelPath, false, locvar.authDirs)>
 
-							<cfset result.error = true />
-							<cfset result.msg = "Directory access denied." />
+							<cfset result['error'] = true />
+							<cfset result['msg'] = "Directory access denied." />
 
 						<!--- validate action --->
 						<cfelseif NOT isActionValid("fileUpload",locvar.authActions)>
 
-							<cfset result.error = true />
-							<cfset result.msg = "Not authorized to upload files." />
+							<cfset result['error'] = true />
+							<cfset result['msg'] = "Not authorized to upload files." />
 
 						<!--- validate that the "baseRelPath" exists --->
 						<cfelseif NOT DirectoryExists(ExpandPath(cj.baseRelPath))>
 
-							<cfset result.error = true />
-							<cfset result.msg = "Directory does not exist." />
+							<cfset result['error'] = true />
+							<cfset result['msg'] = "Directory does not exist." />
 
 						<cfelseif isDefined("locvar.fileSize.size") and locvar.fileSize.size gt (cj.params.maxSize * 1024)>
 
-							<cfset result.error = true />
-							<cfset result.msg = "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(cj.params.maxSize, '9,999')#KB.">
+							<cfset result['error'] = true />
+							<cfset result['msg'] = "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(cj.params.maxSize, '9,999')#KB.">
 
 						<cfelse>
 
-							<cfset result.msg = ArrayNew(1) />
+							<cfset result['msg'] = ArrayNew(1) />
 
 							<!--- validate that we have the proper form fields --->
 							<cfif NOT DirectoryExists(ExpandPath(cj.baseRelPath))>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result.msg, "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
+								<cfset ArrayAppend(result['msg'], "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
 							</cfif>
 							<cfif Len(cj.baseRelPath) eq 0 or ReFind("[^a-zA-Z0-9\,\$\-\_\.\+\!\*\'\(\)\/]+", cj.baseRelPath) gt 0>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result.msg, "Variable BASEURL not defined or invalid data.") />
+								<cfset ArrayAppend(result['msg'], "Variable BASEURL not defined or invalid data.") />
 							</cfif>
 							<cfif cj.params.fileExts neq "*" and ReFind("[^a-zA-Z0-9\,]+", URLDecode(cj.params.fileExts)) gt 0>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result.msg, "Variable FILEEXTS not defined or invalid data.") />
+								<cfset ArrayAppend(result['msg'], "Variable FILEEXTS not defined or invalid data.") />
 							<cfelse>
 								<!--- remove any spaced between the list items ", " or " ," --->
 								<cfset cj.params.fileExts = ReReplace(URLDecode(cj.params.fileExts), "[\s]*,[\s]*",",","ALL") />
 							</cfif>
 							<cfif NOT isNumeric(cj.params.maxSize) or (isNumeric(cj.params.maxSize) and (cj.params.maxSize lt 1 or cj.params.maxSize gt 9999999))>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result.msg, "Variable MAXSIZE not defined or invalid data.") />
+								<cfset ArrayAppend(result['msg'], "Variable MAXSIZE not defined or invalid data.") />
 							</cfif>
 							<cfif NOT isNumeric(cj.params.maxWidth) or (isNumeric(cj.params.maxWidth) and (cj.params.maxWidth lt 1 or cj.params.maxSize gt 9999999))>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result.msg, "Variable MAXWIDTH not defined or invalid data.") />
+								<cfset ArrayAppend(result['msg'], "Variable MAXWIDTH not defined or invalid data.") />
 							</cfif>
 							<cfif NOT isNumeric(cj.params.maxHeight) or (isNumeric(cj.params.maxHeight) and (cj.params.maxHeight lt 1 or cj.params.maxHeight gt 9999999))>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result.msg, "Variable MAXHEIGHT not defined or invalid data.") />
+								<cfset ArrayAppend(result['msg'], "Variable MAXHEIGHT not defined or invalid data.") />
 							</cfif>
 
-							<cfif NOT result.error and ArrayLen(result.msg) eq 0>
+							<cfif NOT result['error'] and ArrayLen(result['msg']) eq 0>
 
-								<cfloop condition="cj.attempts lte cj.maxAttempts">
-
-									<cfset cj.attempts = cj.attempts + 1 />
-									<cfset locvar.newFileName = cj.fileName & "." & cj.fileExt />
-									<cfset cj.xhr = GetHttpRequestData() />
-
-									<!--- upload the file --->
-									<cffile action="write" file="#ExpandPath('#cj.baseRelPath##locvar.newFileName#')#" nameconflict="overwrite" output="#cj.xhr.content#" />
-									<cfset sleep(25) >
-
-									<cfset cj.fileInfo = GetFileInfo(ExpandPath('#cj.baseRelPath##locvar.newFileName#')) />
-
-									<cfif cj.fileInfo.size gt (cj.params.maxSize * 1024)>
-
-										<cfif FileExists(ExpandPath('#cj.baseRelPath##locvar.newFileName#'))>
-											<cffile action="delete" file="#ExpandPath('#cj.baseRelPath##locvar.newFileName#')#" />
-										</cfif>
-										<cfset result.error = true />
-										<cfset ArrayAppend(result.msg, "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(cj.params.maxSize, '9,999')#KB.")>
-
+								<!--- we're all good in the hood, since cffile write doesn't make unqiue file names, loop through until we can write one --->
+								<cfset locvar.tempFileName = cj.fileName & "." & cj.fileExt />
+								<cfloop index="locvar.idx" from="1" to="999">
+									<cfif NOT FileExists(ExpandPath('#cj.baseRelPath##locvar.tempFileName#'))>
+										<cffile action="write" file="#ExpandPath('#cj.baseRelPath##locvar.tempFileName#')#" output="#locvar.requestData.content#" />
+										<cfbreak />
 									<cfelse>
+										<cfset locvar.tempFileName = cj.fileName & locvar.idx & "." & cj.fileExt />
+									</cfif>
+								</cfloop>
+								<cfset sleep(25) >
 
-										<cfif IsImageFile(ExpandPath('#cj.baseRelPath##locvar.newFileName#'))>
+								<!---
+								 | CHECK TO SEE IF THE WAS AN IMAGE BEFORE WE SCALE IT
+								 | *using isImageFile() might crash, but only if CF8 is missing an update it could crash the server.
+								--->
+								<cfif server.coldfusion.productname eq "Railo" or ListGetAt(server.coldfusion.productversion, 1) gt 8>
+									<cfset locvar.isImg = isImageFile(ExpandPath('#cj.baseRelPath##locvar.tempFileName#')) />
+								<cfelse>
+									<cfif ListFindNoCase(variables.webImgFileList, cj.fileExt) gt 0>
+										<cfset locvar.isImg = true />
+									<cfelse>
+										<cfset locvar.isImg = false />
+									</cfif>
+								</cfif>
+								<cfif locvar.isImg and isNumeric(cj.params.maxWidth) and isNumeric(cj.params.maxHeight)>
 
-											<cfimage action="read" name="locvar.imgread" source="#ExpandPath('#cj.baseRelPath##locvar.newFileName#')#" />
-											<cfset result.msg = StructNew() />
-											<cfset result.msg.filename = locvar.newFileName />
-											<cfset result.msg.origWidth = locvar.imgread["width"] />
-											<cfset result.msg.origHeight = locvar.imgread["height"] />
-
-											<!--- do we need to scale the image? --->
-											<cfif (isNumeric(cj.params.maxWidth) and cj.params.maxWidth lt locvar.imgread["width"]) or (isNumeric(cj.params.maxHeight) and cj.params.maxHeight lt locvar.imgread["height"])>
-
-												<!---
-													resize the image if it's to big.
-												—————————————————————————————————————————————————————————————————————————————————————— --->
-												<cfset ImageSetAntialiasing(locvar.imgread, "on") />
-												<cfset locvar.imgInfo = calcScaleInfo(locvar.imgread["width"], locvar.imgread["height"], cj.params.maxWidth, cj.params.maxHeight, 'fit') />
-												<cfset ImageScaleToFit(locvar.imgread, locvar.imgInfo.width, locvar.imgInfo.height, "highestQuality", "0.8") />
-												<cfimage action="write" source="#locvar.imgread#" destination="#ExpandPath('#cj.baseRelPath##locvar.newFileName#')#" overwrite="yes" />
-												<cfset result.msg.scaleWidth = locvar.imgInfo.width />
-												<cfset result.msg.scaleHeight = locvar.imgInfo.height />
-
-											</cfif>
-
-										</cfif>
-
+									<cfimage action="read" name="locvar.imgFile" source="#ExpandPath('#cj.baseRelPath##locvar.tempFileName#')#" />
+									<cfif locvar.imgFile["width"] gt cj.params.maxWidth or locvar.imgFile["height"] gt cj.params.maxHeight>
+										<cfset ImageSetAntialiasing(locvar.imgFile, "on") />
+										<cfset locvar.imgInfo = calcScaleInfo(locvar.imgFile["width"], locvar.imgFile["height"], cj.params.maxWidth, cj.params.maxHeight, "fit") />
+										<cfset ImageScaleToFit(locvar.imgFile, locvar.imgInfo.width, locvar.imgInfo.height, "highestQuality", "1") />
+										<cfimage action="write" source="#locvar.imgFile#" destination="#ExpandPath('#cj.baseRelPath##locvar.tempFileName#')#" overwrite="yes" />
 									</cfif>
 
-								</cfloop>
+								</cfif>
+
+								<cfset result['sucess'] = true />
+								<cfset result['error'] = false />
+								<cfset result['msg'] = "" />
 
 							</cfif>
 
@@ -1046,21 +1045,14 @@
 
 				<cfcatch type="any">
 
-					<cfset result.error = true />
-					<cfset result.msg = cfcatch.message />
+					<cfset result['error'] = true />
+					<cfset result['msg'] = cfcatch.message />
 
 				</cfcatch>
 
 			</cftry>
 
-		<cfelse>
-
-			<cfset result.error = true />
-			<cfset result.msg = "Invalid request method. (doDropUpload)" />
-
-		</cfif>
-
-		<cfcontent type="text/plain" reset="true"><cfoutput>#SerializeJSON(result)#</cfoutput><cfabort />
+			<cfreturn result />
 
 	</cffunction>
 
@@ -1073,7 +1065,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="doDeleteFile" access="remote" output="false" returntype="any">
+	<cffunction name="doDeleteFile" access="remote" output="false" returntype="any" returnformat="json">
 		<cfargument name="baseRelPath" type="string" required="yes" />
 		<cfargument name="fileName" type="string" required="yes" />
 		<cfargument name="timeOut" type="numeric" required="no" default="900" />
@@ -1095,33 +1087,33 @@
 			<!--- validate "navigateDirectory" action and path --->
 			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory access denied." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory access denied." />
 
 			<!--- validate action --->
 			<cfelseif NOT isActionValid("fileDelete",locvar.authActions)>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Not authorized to delete files." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Not authorized to delete files." />
 
 			<!--- validate that the "baseRelPath" exists --->
 			<cfelseif NOT DirectoryExists(ExpandPath(locvar.baseRelPath))>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory does not exist." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory does not exist." />
 
 			<cfelse>
 
 				<cfif FileExists(ExpandPath("#locvar.baseRelPath##arguments.fileName#"))>
 					<cffile action="delete" file="#ExpandPath("#locvar.baseRelPath##arguments.fileName#")#">
 				</cfif>
-				<cfset result.error = false />
-				<cfset result.msg = "" />
+				<cfset result['error'] = false />
+				<cfset result['msg'] = "" />
 
 			</cfif>
 			<cfcatch type="any">
-				<cfset result.error = true />
-				<cfset result.msg = cfcatch.message />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = cfcatch.message />
 			</cfcatch>
 		</cftry>
 		<cfreturn result />
@@ -1160,41 +1152,41 @@
 			<!--- validate "navigateDirectory" action and path --->
 			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory access denied." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory access denied." />
 
 			<!--- validate action --->
 			<cfelseif NOT isActionValid("deleteDirectory",locvar.authActions)>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Deleting directories is not allowed." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Deleting directories is not allowed." />
 
 			<!--- validate that the "baseRelPath" exists --->
 			<cfelseif NOT DirectoryExists(ExpandPath(locvar.baseRelPath))>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory does not exist." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory does not exist." />
 
 			<!--- make sure it's not the root directory!! --->
 			<cfelseif Len(URLDecode(arguments.dirName)) eq 0 or URLDecode(arguments.dirName) eq "/" or URLDecode(arguments.dirName) eq "\">
 
-				<cfset result.error = true />
-				<cfset result.msg = "You cannot delete the root directory." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "You cannot delete the root directory." />
 
 			<cfelse>
 
 				<!--- do a recursive delete --->
-				<cfset result.error = deleteDirectory(ExpandPath("#locvar.baseRelPath##arguments.dirName#"),true) />
-				<cfif result.error eq true>
-					<cfset result.msg = "" />
+				<cfset result['error'] = deleteDirectory(ExpandPath("#locvar.baseRelPath##arguments.dirName#"),true) />
+				<cfif result['error'] eq true>
+					<cfset result['msg'] = "" />
 				<cfelse>
-					<cfset result.msg = "There was a problem deleting the directory." />
+					<cfset result['msg'] = "There was a problem deleting the directory." />
 				</cfif>
 
 			</cfif>
 			<cfcatch type="any">
-				<cfset result.error = true />
-				<cfset result.msg = cfcatch.message />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = cfcatch.message />
 			</cfcatch>
 		</cftry>
 		<cfreturn result />
@@ -1231,46 +1223,46 @@
 			<!--- validate "navigateDirectory" action and path --->
 			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory access denied." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory access denied." />
 
 			<!--- validate action --->
 			<cfelseif NOT isActionValid("createDirectory",locvar.authActions)>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Creating directories is not allowed." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Creating directories is not allowed." />
 
 			<!--- validate that the "baseRelPath" exists --->
 			<cfelseif NOT DirectoryExists(ExpandPath(locvar.baseRelPath))>
 
-				<cfset result.error = true />
-				<cfset result.msg = "Directory does not exist." />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = "Directory does not exist." />
 
 			<cfelse>
 
 				<!--- make sure we don't have any funky characters in the name --->
 				<cfif ReFindNoCase("[^a-zA-Z0-9_\-]",arguments.dirName) gt 0>
-					<cfset result.error = true />
-					<cfset result.msg = "Invalid characters detected in directory name. (Valid [a-zA-Z0-9_-])" />
+					<cfset result['error'] = true />
+					<cfset result['msg'] = "Invalid characters detected in directory name. (Valid [a-zA-Z0-9_-])" />
 				<cfelseif Len(arguments.dirName) lt 1 or Len(arguments.dirName) gt 64>
-					<cfset result.error = true />
-					<cfset result.msg = "Invalid directory name length. (Valid 1-64 characters)" />
+					<cfset result['error'] = true />
+					<cfset result['msg'] = "Invalid directory name length. (Valid 1-64 characters)" />
 				<cfelse>
 					<!--- make sure the directory doesn't already exists --->
 					<cfif NOT DirectoryExists(ExpandPath(URLDecode("#locvar.baseRelPath##arguments.dirName#")))>
 						<cfdirectory action="create" directory="#ExpandPath(URLDecode('#locvar.baseRelPath##arguments.dirName#'))#" >
-						<cfset result.error = false />
-						<cfset result.msg = "" />
+						<cfset result['error'] = false />
+						<cfset result['msg'] = "" />
 					<cfelse>
-						<cfset result.error = true />
-						<cfset result.msg = "Directory already exists." />
+						<cfset result['error'] = true />
+						<cfset result['msg'] = "Directory already exists." />
 					</cfif>
 				</cfif>
 
 			</cfif>
 			<cfcatch type="any">
-				<cfset result.error = true />
-				<cfset result.msg = cfcatch.message />
+				<cfset result['error'] = true />
+				<cfset result['msg'] = cfcatch.message />
 			</cfcatch>
 		</cftry>
 		<cfreturn result />
@@ -1380,8 +1372,8 @@
 		<cfif Len(input) eq 0>
 			<cfreturn "" />
 		</cfif>
-		<cfset output = REReplaceNoCase(output,'[^a-zA-Z0-9_]+','_','ALL')>
-		<cfset output = REReplaceNoCase(output,'__','_','ALL')>
+		<cfset output = REReplaceNoCase(output,'[^a-zA-Z0-9_\-]+','_','ALL')>
+		<cfset output = REReplaceNoCase(output,'[_]+','_','ALL')>
 		<cfreturn LCase(output) />
 	</cffunction>
 
