@@ -1577,7 +1577,7 @@
 				initPath = $.cookie('cj_dir') || (opts.baseRelPath.length > 0 ? opts.baseRelPath[0] : null);
 
 			// the cookie path should never be shorter than the passed path
-			initPath = initPath.length < opts.baseRelPath[0].length ? opts.baseRelPath[0] : initPath;
+			initPath = initPath.length != opts.baseRelPath[0].length ? opts.baseRelPath[0] : initPath;
 
 			if (sys.debug) {
 				console.log('initPath: ' + initPath);
