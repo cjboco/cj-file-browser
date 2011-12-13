@@ -114,7 +114,7 @@
 				version: '4.0.1',
 				timer: null,
 				autoCenter: null,
-				currentUrl: 0,
+				currentPathIdx: 0,
 				dirContents: [],
 				basePath: '/',
 				debug: false
@@ -284,6 +284,16 @@
 		 * CORE Browser Functions
 		 */
 
+		// copy item to new location
+		function moveItem() {
+
+		}
+
+		// rename an item
+		function renameItem() {
+
+		}
+
 		// displays our dialog boxes
 		function displayDialog(opts) {
 			// opts: type, state, label, content, cbOk, cbCancel
@@ -449,10 +459,10 @@
 			$('#directories optgroup').remove();
 			$('#directories').append('<optgroup label="Current Directory Path" title="Current Directory Path">');
 			$(opts.baseRelPath).each(function (intIndex, objValue) {
-				$('#directories').append('<option value="' + objValue + '"' + (intIndex === sys.currentUrl ? ' selected="selected"' : '') + '>' + objValue + '<\/option>').attr("disabled", false);
+				$('#directories').append('<option value="' + objValue + '"' + (intIndex === sys.currentPathIdx ? ' selected="selected"' : '') + '>' + objValue + '<\/option>').attr("disabled", false);
 			});
 			// need to see if we have more than one directory and change the directory NAVIGATION accordingly
-			if (opts.baseRelPath.length > 1 && sys.currentUrl > 0) {
+			if (opts.baseRelPath.length > 1 && sys.currentPathIdx > 0) {
 				$('#directoryOut').attr('disabled', false);
 			} else {
 				$('#directoryOut').attr('disabled', true);
@@ -460,7 +470,7 @@
 		}
 
 		function doLoadDirectoryImage($elem, idx, currentDir) {
-			if ($elem.length > 0 && currentDir === sys.currentUrl) {
+			if ($elem.length > 0 && currentDir === sys.currentPathIdx) {
 				$elem.each(function() {
 					var $this = $(this),
 						fname = window.encodeURIComponent($this.find('.diritem').attr('rel')),
@@ -473,7 +483,7 @@
 							method: 'getImageThumb',
 							returnFormat: 'json',
 							timeOut: parseInt(opts.timeOut, 10),
-							baseRelPath: window.encodeURIComponent(opts.baseRelPath[sys.currentUrl]),
+							baseRelPath: window.encodeURIComponent(opts.baseRelPath[sys.currentPathIdx]),
 							elemID: $this.attr('id'),
 							fileName: fname
 						},
@@ -518,7 +528,7 @@
 		function getDirectoryImages() {
 			// show image previews?
 			if (opts.showImgPreview) {
-				doLoadDirectoryImage($('#browser ul li.GIF, #browser ul li.JPG, #browser ul li.PNG'), 0, sys.currentUrl);
+				doLoadDirectoryImage($('#browser ul li.GIF, #browser ul li.JPG, #browser ul li.PNG'), 0, sys.currentPathIdx);
 			}
 		}
 
@@ -548,7 +558,7 @@
 					method: 'getDirectoryList',
 					returnFormat: 'json',
 					timeOut: parseInt(opts.timeOut, 10),
-					baseRelPath: window.encodeURIComponent(opts.baseRelPath[sys.currentUrl]),
+					baseRelPath: window.encodeURIComponent(opts.baseRelPath[sys.currentPathIdx]),
 					fileExts: window.encodeURIComponent(opts.fileExts)
 				},
 				dataType: 'json',
@@ -573,10 +583,14 @@
 								state: 'hide'
 							});
 							if (typeof sys.dirContents === 'object' && sys.dirContents.length > 0) {
-								$.cookie('cj_dir', opts.baseRelPath[sys.currentUrl], {
+								sys.basePath = opts.baseRelPath[sys.currentPathIdx];
+								$.cookie('cj_dir', sys.basePath, {
 									expires: 1,
-									path: sys.basePath
+									path: opts.baseRelPath[0]
 								});
+								if (sys.debug) {
+									console.log($.cookie('cj_dir'));
+								}
 								if ($.isFunction(clb)) {
 									clb.apply();
 								}
@@ -717,7 +731,9 @@
 						'<div class="name">' + doShortentFileName(objValue.NAME, 20) + '<\/div>' +
 						'<div class="namefull">' + objValue.NAME + '<\/div>' +
 						(objValue.TYPE === 'FILE' ? '<div class="size">' + displayFileSize(parseInt(objValue.SIZE, 10)) + '<\/div>' : '') +
-						(typeof objValue.WIDTH === 'number' && typeof objValue.HEIGHT === 'number' ? '<div class="dimensions"><span class="width">' + objValue.WIDTH + '<\/span> x <span class="height">' + objValue.HEIGHT + '<\/span> pixels<\/div>' : '') +
+
+						(parseInt(objValue.WIDTH, 10) && parseInt(objValue.HEIGHT, 10) ? '<div class="dimensions"><span class="width">' + parseInt(objValue.WIDTH, 10) + '<\/span> x <span class="height">' + parseInt(objValue.HEIGHT, 10) + '<\/span> pixels<\/div>' : '') +
+
 						(objValue.DATELASTMODIFIED.length > 0 ? '<div class="modified">' + dateFormat(objValue.DATELASTMODIFIED, 'mmm dS, yyyy, h:MM:ss TT') + '<\/div>' : '') +
 						'<div class="mimeType">' + objValue.MIME + '<\/div>'
 					);
@@ -726,7 +742,7 @@
 					total_size += parseInt(objValue.SIZE, 10);
 
 					// append out info string to the list items
-					infoStr = objValue.NAME + ' \n' + (objValue.TYPE === 'FILE' ? displayFileSize(parseInt(objValue.SIZE, 10)) + ' \n' : '') + (typeof objValue.WIDTH === 'number' && typeof objValue.HEIGHT === 'number' ? objValue.WIDTH + ' x ' + objValue.HEIGHT + ' pixels \n' : '') + dateFormat(objValue.DATELASTMODIFIED, 'mmm dS, yyyy, h:MM:ss TT');
+					infoStr = objValue.NAME + ' \n' + (objValue.TYPE === 'FILE' ? displayFileSize(parseInt(objValue.SIZE, 10)) + ' \n' : '') + (parseInt(objValue.WIDTH, 10) && parseInt(objValue.HEIGHT, 10) ? parseInt(objValue.WIDTH, 10) + ' x ' + parseInt(objValue.HEIGHT, 10) + ' pixels \n' : '') + dateFormat(objValue.DATELASTMODIFIED, 'mmm dS, yyyy, h:MM:ss TT');
 					$(lis).attr('title', infoStr);
 					$(lib).attr('title', infoStr).append(info);
 
@@ -785,8 +801,8 @@
 							$('#directoryIn').attr('disabled', false).on('click', function (e) {
 								if ($this.attr('disabled') !== 'disabled' && $this.attr('disabled') !== true) {
 									var path = $('#sidebar ul li.selected').find('span').attr('rel');
-									opts.baseRelPath.push(opts.baseRelPath[sys.currentUrl] + path + '/');
-									sys.currentUrl += 1;
+									opts.baseRelPath.push(opts.baseRelPath[sys.currentPathIdx] + path + '/');
+									sys.currentPathIdx += 1;
 									updateDirOptions();
 									doDirListing(function() {
 										displayDirListing();
@@ -805,8 +821,8 @@
 						fileObj = sys.dirContents[parseInt(($this.attr('ID')).replace('sidebar_ID', ''), 10)];
 						doFileSelect(fileObj);
 					} else if ($this.attr('rel') === 'Directory') {
-						opts.baseRelPath.push(opts.baseRelPath[sys.currentUrl] + path + '/');
-						sys.currentUrl += 1;
+						opts.baseRelPath.push(opts.baseRelPath[sys.currentPathIdx] + path + '/');
+						sys.currentPathIdx += 1;
 						updateDirOptions();
 						doDirListing(function() {
 							displayDirListing();
@@ -865,8 +881,8 @@
 							$('#directoryIn').attr('disabled', false).on('click', function (e) {
 								if ($this.attr('disabled') !== 'disabled' && $this.attr('disabled') !== true) {
 									var path = $('#browser ul li.selected').find('.diritem').attr('rel');
-									opts.baseRelPath.push(opts.baseRelPath[sys.currentUrl] + path + '/');
-									sys.currentUrl += 1;
+									opts.baseRelPath.push(opts.baseRelPath[sys.currentPathIdx] + path + '/');
+									sys.currentPathIdx += 1;
 									updateDirOptions();
 									doDirListing(function() {
 										displayDirListing();
@@ -885,14 +901,24 @@
 						fileObj = sys.dirContents[parseInt(($this.attr('ID')).replace('browser_ID', ''), 10)];
 						doFileSelect(fileObj);
 					} else if ($this.attr('rel') === 'Directory') {
-						opts.baseRelPath.push(opts.baseRelPath[sys.currentUrl] + path + '/');
-						sys.currentUrl += 1;
+						opts.baseRelPath.push(opts.baseRelPath[sys.currentPathIdx] + path + '/');
+						sys.currentPathIdx += 1;
 						updateDirOptions();
 						doDirListing(function() {
 							displayDirListing();
 						});
 					}
 					e.stopImmediatePropagation();
+				}).draggable({
+					cursor: 'move',
+					helper: 'clone',
+					opacity: 0.5,
+					containment: '#browser',
+					scroll: true,
+					start: function(event, ui) {
+						var $this = $(event.target).parents('li');
+						console.log($this);
+					}
 				});
 
 				getDirectoryImages();
@@ -906,7 +932,7 @@
 			});
 
 			// update display stats info
-			updateDisplayStats(opts.baseRelPath[sys.currentUrl], dir.length, total_size);
+			updateDisplayStats(opts.baseRelPath[sys.currentPathIdx], dir.length, total_size);
 		}
 
 
@@ -1088,7 +1114,7 @@
 							true
 						);
 						xhr.setRequestHeader('Content-Type', file.type);
-						xhr.setRequestHeader('X-Filename', window.encodeURIComponent(file.name) || window.encodeURIComponent(file.fileName));
+						xhr.setRequestHeader('X-File-Name', window.encodeURIComponent(file.name) || window.encodeURIComponent(file.fileName));
 						xhr.setRequestHeader('X-File-Params', window.encodeURIComponent(prms));
 						xhr.send(file);
 					}
@@ -1181,8 +1207,8 @@
 				$('#directoryOut').mouseup(function () {
 					var $this = $(this);
 					if ($this.attr('disabled') !== 'disabled' && $this.attr('disabled') !== true) {
-						sys.currentUrl = sys.currentUrl - 1 >= 0 ? sys.currentUrl - 1 : 0;
-						opts.baseRelPath.remove(sys.currentUrl + 1, opts.baseRelPath.length - sys.currentUrl + 1);
+						sys.currentPathIdx = sys.currentPathIdx - 1 >= 0 ? sys.currentPathIdx - 1 : 0;
+						opts.baseRelPath.remove(sys.currentPathIdx + 1, opts.baseRelPath.length - sys.currentPathIdx + 1);
 						doDirListing(function() {
 							displayDirListing();
 						});
@@ -1192,9 +1218,9 @@
 				// set up the directories SELECT menu
 				$('#directories').change(function () {
 					var $this = $(this);
-					if ($this.get(0).selectedIndex < sys.currentUrl) {
+					if ($this.get(0).selectedIndex < sys.currentPathIdx) {
 						opts.baseRelPath.remove($this.get(0).selectedIndex + 1, opts.baseRelPath.length - $this.get(0).selectedIndex + 1);
-						sys.currentUrl = $this.get(0).selectedIndex;
+						sys.currentPathIdx = $this.get(0).selectedIndex;
 						doDirListing(function() {
 							displayDirListing();
 						});
@@ -1250,7 +1276,7 @@
 										method: 'doCreateNewDirectory',
 										returnFormat: 'json',
 										timeOut: parseInt(opts.timeOut, 10),
-										baseRelPath: window.encodeURIComponent(opts.baseRelPath[sys.currentUrl]),
+										baseRelPath: window.encodeURIComponent(opts.baseRelPath[sys.currentPathIdx]),
 										dirName: window.encodeURIComponent(dirName)
 									},
 									dataType: 'json',
@@ -1346,7 +1372,7 @@
 											method: curType === 'File' ? 'doDeleteFile' : 'doDeleteDirectory',
 											returnFormat: 'json',
 											timeOut: parseInt(opts.timeOut, 10),
-											baseRelPath: window.encodeURIComponent(opts.baseRelPath[sys.currentUrl]),
+											baseRelPath: window.encodeURIComponent(opts.baseRelPath[sys.currentPathIdx]),
 											dirName: window.encodeURIComponent(curFile),
 											fileName: window.encodeURIComponent(curFile)
 										},
@@ -1421,7 +1447,7 @@
 							if ($('#CJUploadForm #fileUploadField').val() !== '') {
 								$('#CJFileBrowser #CJFileBrowserForm').append(
 									'<div class="hider">' +
-										'<input type="hidden" name="baseUrl" value="' + window.encodeURIComponent(opts.baseRelPath[sys.currentUrl]) + '" \/>' +
+										'<input type="hidden" name="baseUrl" value="' + window.encodeURIComponent(opts.baseRelPath[sys.currentPathIdx]) + '" \/>' +
 										'<input type="hidden" name="fileExts" value="' + window.encodeURIComponent(opts.fileExts) + '" \/>' +
 										'<input type="hidden" name="maxSize" value="' + window.encodeURIComponent(opts.maxSize) + '" \/>' +
 										'<input type="hidden" name="maxWidth" value="' + window.encodeURIComponent(opts.maxWidth) + '" \/>' +
@@ -1574,22 +1600,36 @@
 		// initial test to see if our handler exists
 		function getHandler() {
 			var json,
-				initPath = $.cookie('cj_dir') || (opts.baseRelPath.length > 0 ? opts.baseRelPath[0] : null);
+				re = new RegExp('/\/|\\/', 'gim'),
+				pathArr;
 
-			// the cookie path should never be shorter than the passed path
-			initPath = initPath.length != opts.baseRelPath[0].length ? opts.baseRelPath[0] : initPath;
+			sys.basePath = $.cookie('cj_dir') || (opts.baseRelPath.length > 0 ? opts.baseRelPath[0] : null);
+
+			// need to set the basePath based on cookie (if valid) or the opts.baseRelPath
+			if (sys.basePath && sys.basePath.indexOf(opts.baseRelPath[0]) > -1) {
+				// the path is valid, but we need to loop through it to populate our path object
+				sys.basePath = sys.basePath.length > 1 ? sys.basePath.substring(1, sys.basePath.length - 1) : '/';
+				pathArr = sys.basePath.split(re);
+				$.each(pathArr, function(a, b) {
+					opts.baseRelPath.push(opts.baseRelPath[opts.baseRelPath.length - 1] + b + '/');
+				});
+			} else {
+				sys.basePath = opts.baseRelPath[0];
+			}
+			sys.currentPathIdx = opts.baseRelPath.length - 1;
+			sys.basePath = opts.baseRelPath[sys.currentPathIdx];
 
 			if (sys.debug) {
-				console.log('initPath: ' + initPath);
+				console.log('sys.basePath: ' + sys.basePath);
 			}
 
-			if (!initPath) {
+			if (!sys.basePath) {
 				// if either path is invalid, then make sure the cookie get's removed.
 				$.cookie('cj_dir', null, {
 					expires: -1,
 					path: sys.basePath
 				});
-				throw('Oops! There was a problem\n\nThe initial path is not valid (' + initPath + ').');
+				throw('Oops! There was a problem\n\nThe initial path is not valid (' + sys.basePath + ').');
 			} else {
 
 				json = $.parseJSON(
@@ -1599,7 +1639,7 @@
 					data: {
 						method: 'isHandlerReady',
 						returnFormat: 'json',
-						dirPath: window.escape(initPath), // we can now validate the initial directory path
+						dirPath: window.escape(sys.basePath), // validates the initial directory path
 						timeOut: parseInt(opts.timeOut, 10),
 						version: sys.version
 					},
@@ -1685,7 +1725,7 @@
 				}
 
 				// need to verify that we have valid setting values...
-				if ((typeof opts.actions !== 'object' || opts.actions.length === 0) || (typeof opts.baseRelPath !== 'object' || opts.baseRelPath.length === 0) || (typeof opts.fileExts !== 'string' || opts.fileExts.length === 0) || (typeof opts.maxSize !== 'number' || opts.maxSize === 0) || (typeof opts.maxWidth !== 'number' || opts.maxWidth === 0) || (typeof opts.maxHeight !== 'number' || opts.maxHeight === 0) || (typeof opts.showImgPreview !== 'boolean') || (typeof opts.engine !== 'string' || opts.engine === '') || (typeof opts.handler !== 'string' || opts.handler === '') || (typeof opts.timeOut !== 'number' || opts.timeOut < 0) || (typeof opts.callBack !== 'function' && opts.callBack !== null) || (typeof sys.currentUrl !== 'number' || sys.currentUrl < 0)) {
+				if ((typeof opts.actions !== 'object' || opts.actions.length === 0) || (typeof opts.baseRelPath !== 'object' || opts.baseRelPath.length === 0) || (typeof opts.fileExts !== 'string' || opts.fileExts.length === 0) || (typeof opts.maxSize !== 'number' || opts.maxSize === 0) || (typeof opts.maxWidth !== 'number' || opts.maxWidth === 0) || (typeof opts.maxHeight !== 'number' || opts.maxHeight === 0) || (typeof opts.showImgPreview !== 'boolean') || (typeof opts.engine !== 'string' || opts.engine === '') || (typeof opts.handler !== 'string' || opts.handler === '') || (typeof opts.timeOut !== 'number' || opts.timeOut < 0) || (typeof opts.callBack !== 'function' && opts.callBack !== null) || (parseInt(sys.currentPathIdx, 10) || 0)) {
 
 					// problem initializing the script
 					throw('Oops! There was a problem\n\nVariables were not initialized properly or missing values.');
@@ -1703,8 +1743,12 @@
 
 		// init our navbar
 		if (!JSON) {
-			$.getScript('assets/js/json2.js', function() {
-				init();
+			$.getScript('assets/js/json2.js', function(data, statusText) {
+				if (!statusText || statusText !== "success") {
+					throw('Problems initializing json2.js (cj.file_browser.js)');
+				} else {
+					init();
+				}
 			});
 		} else {
 			init();

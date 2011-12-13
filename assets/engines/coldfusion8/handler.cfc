@@ -884,7 +884,7 @@
 			<cftry>
 
 				<cfset locvar.requestData = GetHttpRequestData() />
-				<cfset cj.origFilename = LCase(URLDecode(cgi.http_x_filename)) />
+				<cfset cj.origFilename = LCase(URLDecode(cgi.http_x_file_name)) />
 
 				<cfset cj.nameArr = ListToArray(cj.origFilename, ".") />
 				<cfset cj.paramsStr = URLDecode(cgi.http_x_file_params) />
