@@ -1628,20 +1628,22 @@
 			sys.basePath = $.cookie('cj_dir') || (opts.baseRelPath.length > 0 ? opts.baseRelPath[0] : null);
 			if (sys.basePath && sys.basePath.indexOf(opts.baseRelPath[0]) > -1) {
 				// the path is valid, but we need to loop through it to populate our path object
-				sys.basePath = sys.basePath.length > 1 ? (sys.basePath.replace(opts.baseRelPath[0], '')).substring(1, sys.basePath.length - 1) : '/';
+				sys.basePath = sys.basePath.length > 1 ? (sys.basePath.replace(opts.baseRelPath[0], '')).substring(0, sys.basePath.length - 1) : '/';
 				if (sys.basePath.length > 0) {
 					pathArr = sys.basePath.split(re);
 					$.each(pathArr, function(a, b) {
-						opts.baseRelPath.push(opts.baseRelPath[opts.baseRelPath.length - 1] + b + '/');
+						opts.baseRelPath.push( (a > 0 ? opts.baseRelPath[opts.baseRelPath.length - 1] : '/') + b + (a < pathArr.length - 1 ? '/' : ''));
 					});
+					sys.currentPathIdx = opts.baseRelPath.length - 1;
+					sys.basePath = opts.baseRelPath[sys.currentPathIdx];
 				} else {
+					sys.currentPathIdx = 0;
 					sys.basePath = opts.baseRelPath[0];
 				}
 			} else {
+				sys.currentPathIdx = 0;
 				sys.basePath = opts.baseRelPath[0];
 			}
-			sys.currentPathIdx = opts.baseRelPath.length - 1;
-			sys.basePath = opts.baseRelPath[sys.currentPathIdx];
 
 			if (sys.debug) {
 				console.log('sys.basePath: ' + sys.basePath);
