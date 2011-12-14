@@ -10,14 +10,13 @@ function CJFileBrowser_tinyMCE_Callback(field_name, url, type, win) {
 		cmsURL = tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_browseUrl') + "?type=" + type;
 	} else {
 		// script URL - use an absolute path!
-		cmsURL = window.location.toString();
+		cmsURL = tinyMCE.activeEditor.getParam('plugin_cjfilebrowser_browseUrl');
 		if (cmsURL.indexOf("?") < 0) {
 			//add the type as the only query parameter
-			cmsURL = cmsURL + "?type=" + type;
-		}
-		else {
+			cmsURL = cmsURL + "?type=" + type + '&file=' + window.escape(url);
+		} else {
 			//add the type as an additional query parameter
-			cmsURL = cmsURL + "&type=" + type;
+			cmsURL = cmsURL + "&type=" + type + '&file=' + window.escape(url);
 		}
 	}
 	tinyMCE.activeEditor.windowManager.open({

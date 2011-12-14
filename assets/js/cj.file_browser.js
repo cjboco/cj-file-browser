@@ -117,6 +117,7 @@
 				currentPathIdx: 0,
 				dirContents: [],
 				basePath: '/',
+				dragObjId: null,
 				debug: false
 			};
 
@@ -285,8 +286,8 @@
 		 */
 
 		// copy item to new location
-		function moveItem() {
-
+		function moveItem(dragID, dropID) {
+			console.log('dragID:' + dragID + ' dropID:' + dropID);
 		}
 
 		// rename an item
@@ -917,7 +918,26 @@
 					scroll: true,
 					start: function(event, ui) {
 						var $this = $(event.target).parents('li');
-						console.log($this);
+						sys.dragObjId = $this.attr('id');
+					},
+					stop: function(event, ui) {
+						var $this = $(event.target).parents('li');
+						sys.dragObjId = null;
+					}
+				});
+
+				// setup droppable's for directories
+				$('#browser ul li[rel="Directory"]').droppable({
+					over: function(event, ui) {
+						$(this).addClass('hovering');
+					},
+					out: function(event, ui) {
+						$(this).removeClass('hovering');
+					},
+					drop: function(event, ui) {
+						var $this = $(this);
+						moveItem(sys.dragObjId, $this.attr('id'));
+						sys.dragObjId = null;
 					}
 				});
 
@@ -968,158 +988,160 @@
 				dataTransfer,
 				prms;
 
-			dataTransfer = e.originalEvent.dataTransfer;
-			$trg.removeClass('drop_hover').addClass('drop');
+			if ($trg.parents('li').length === 0) {
 
-			displayDialog({
-				type: 'progress',
-				state: 'show',
-				label: 'Uploading file' + (dataTransfer.files.length > 0 ? 's' : '') + '...'
-			});
+				dataTransfer = e.originalEvent.dataTransfer;
+				$trg.removeClass('drop_hover').addClass('drop');
 
-			try {
-				prms = JSON.stringify(opts);
-			} catch(err) {
-				$trg.removeClass('drop_hover drop');
 				displayDialog({
-					type: 'throw',
+					type: 'progress',
 					state: 'show',
-					label: 'Oops! There was a problem',
-					content: 'The upload parameters could not be determined.'
+					label: 'Uploading file' + (dataTransfer.files.length > 0 ? 's' : '') + '...'
 				});
-				return false;
-			}
 
-			if (sys.debug) {
-				console.log('prms', prms);
-				console.log('dataTransfer.files', dataTransfer.files);
-			}
+				try {
+					prms = JSON.stringify(opts);
+				} catch(err) {
+					$trg.removeClass('drop_hover drop');
+					displayDialog({
+						type: 'throw',
+						state: 'show',
+						label: 'Oops! There was a problem',
+						content: 'The upload parameters could not be determined.'
+					});
+					return false;
+				}
 
-			if (prms && dataTransfer.files.length > 0) {
+				if (sys.debug) {
+					console.log('prms', prms);
+					console.log('dataTransfer.files', dataTransfer.files);
+				}
 
-				$.each(dataTransfer.files, function (i, file) {
-					var xhr = new XMLHttpRequest();
+				if (prms && dataTransfer.files.length > 0) {
 
-					if (!file) {
+					$.each(dataTransfer.files, function (i, file) {
+						var xhr = new XMLHttpRequest();
 
-						$trg.removeClass('drop_hover drop');
-						displayDialog({
-							type: 'throw',
-							state: 'show',
-							label: 'Oops! There was a problem',
-							content: 'The file could not be uploaded. Could not read file.'
-						});
-						return false;
+						if (!file) {
 
-					} else if (file.type.length === 0 || (opts.fileExts !== "*" && opts.fileExts.indexOf(file.type) === -1)) {
+							$trg.removeClass('drop_hover drop');
+							displayDialog({
+								type: 'throw',
+								state: 'show',
+								label: 'Oops! There was a problem',
+								content: 'The file could not be uploaded. Could not read file.'
+							});
+							return false;
 
-						$trg.removeClass('drop_hover drop');
-						displayDialog({
-							type: 'throw',
-							state: 'show',
-							label: 'Oops! There was a problem',
-							content: 'The file could not be uploaded. Wrong MIME type. [' + file.type + ']'
-						});
-						return false;
+						} else if (file.type.length === 0 || (opts.fileExts !== "*" && opts.fileExts.indexOf(file.type) === -1)) {
 
-					} else if (file.size > opts.maxSize * 1024) {
+							$trg.removeClass('drop_hover drop');
+							displayDialog({
+								type: 'throw',
+								state: 'show',
+								label: 'Oops! There was a problem',
+								content: 'The file could not be uploaded. Wrong MIME type. [' + file.type + ']'
+							});
+							return false;
 
-						$trg.removeClass('drop_hover drop');
-						displayDialog({
-							type: 'throw',
-							state: 'show',
-							label: 'Oops! There was a problem',
-							content: 'The file could not be uploaded. File was too large. [' + file.size + ']'
-						});
-						return false;
+						} else if (file.size > opts.maxSize * 1024) {
 
-					} else {
+							$trg.removeClass('drop_hover drop');
+							displayDialog({
+								type: 'throw',
+								state: 'show',
+								label: 'Oops! There was a problem',
+								content: 'The file could not be uploaded. File was too large. [' + file.size + ']'
+							});
+							return false;
 
-						// do the upload
-						xhr.onreadystatechange = function() {
-							if (xhr.readyState === 4)  {
-								if ((xhr.status >= 200 && xhr.status <= 200) || xhr.status == 304) {
-									throw(xhr.responseText);
+						} else {
+
+							// do the upload
+							xhr.onreadystatechange = function() {
+								if (xhr.readyState === 4)  {
+									if ((xhr.status >= 200 && xhr.status <= 200) || xhr.status == 304) {
+										throw(xhr.responseText);
+									}
 								}
-							}
-						};
-						xhr.onload = function(ev) {
-							try {
-								if (sys.debug) {
-									console.log(xhr.responseText);
-								}
-								var data = $.trim(xhr.responseText),
-									json = JSON.parse(data);
-								if (json && typeof json.error === 'boolean' && json.error === false) {
-									doDirListing(function() {
-										displayDirListing();
-									});
-								} else if (!json || typeof json.error === 'undefined' || json.error === true) {
-									if (json && json.msg) {
-										displayDialog({
-											type: 'throw',
-											state: 'show',
-											label: 'Oops! There was a problem',
-											content: json.msg
+							};
+							xhr.onload = function(ev) {
+								try {
+									if (sys.debug) {
+										console.log(xhr.responseText);
+									}
+									var data = $.trim(xhr.responseText),
+										json = JSON.parse(data);
+									if (json && typeof json.error === 'boolean' && json.error === false) {
+										doDirListing(function() {
+											displayDirListing();
 										});
-										return false;
+									} else if (!json || typeof json.error === 'undefined' || json.error === true) {
+										if (json && json.msg) {
+											displayDialog({
+												type: 'throw',
+												state: 'show',
+												label: 'Oops! There was a problem',
+												content: json.msg
+											});
+											return false;
+										} else {
+											displayDialog({
+												type: 'throw',
+												state: 'show',
+												label: 'Oops! There was a problem',
+												content: 'There was a problem uploading your file' + (dataTransfer.files.length > 0 ? 's' : '') + '. Please contact technical support.'
+											});
+											return false;
+										}
 									} else {
 										displayDialog({
 											type: 'throw',
 											state: 'show',
 											label: 'Oops! There was a problem',
-											content: 'There was a problem uploading your file' + (dataTransfer.files.length > 0 ? 's' : '') + '. Please contact technical support.'
+											content: 'There was a problem uploading your file' + (dataTransfer.files.length > 0 ? 's' : '') + '. Please contact technical support'
 										});
 										return false;
 									}
-								} else {
+									$trg.removeClass('drop_hover drop');
+								} catch(err) {
+									if (sys.debug) {
+										console.log('error', err);
+										console.log('xhr.responseText', xhr.responseText);
+									}
+									$trg.removeClass('drop_hover drop');
 									displayDialog({
 										type: 'throw',
 										state: 'show',
 										label: 'Oops! There was a problem',
-										content: 'There was a problem uploading your file' + (dataTransfer.files.length > 0 ? 's' : '') + '. Please contact technical support'
+										content: 'There was a problem uploading your file' + (dataTransfer.files.length > 0 ? 's' : '') + '. Please make sure that the file format is correct.</p><p>If you continue to experience problems, please contact technical support and send them the file you are trying to upload.'
 									});
 									return false;
 								}
-								$trg.removeClass('drop_hover drop');
-							} catch(err) {
+							};
+							xhr.error = function(ev) {
 								if (sys.debug) {
-									console.log('error', err);
-									console.log('xhr.responseText', xhr.responseText);
+									console.log('upload error', ev);
 								}
-								$trg.removeClass('drop_hover drop');
 								displayDialog({
 									type: 'throw',
 									state: 'show',
 									label: 'Oops! There was a problem',
 									content: 'There was a problem uploading your file' + (dataTransfer.files.length > 0 ? 's' : '') + '. Please make sure that the file format is correct.</p><p>If you continue to experience problems, please contact technical support and send them the file you are trying to upload.'
 								});
-								return false;
-							}
-						};
-						xhr.error = function(ev) {
-							if (sys.debug) {
-								console.log('upload error', ev);
-							}
-							displayDialog({
-								type: 'throw',
-								state: 'show',
-								label: 'Oops! There was a problem',
-								content: 'There was a problem uploading your file' + (dataTransfer.files.length > 0 ? 's' : '') + '. Please make sure that the file format is correct.</p><p>If you continue to experience problems, please contact technical support and send them the file you are trying to upload.'
-							});
-						};
-						xhr.open(
-							'POST',
-							'assets/engines/' + opts.engine + '/' + opts.handler + '?method=doDropUpload&returnType=JSON',
-							true
-						);
-						xhr.setRequestHeader('Content-Type', file.type);
-						xhr.setRequestHeader('X-File-Name', window.encodeURIComponent(file.name) || window.encodeURIComponent(file.fileName));
-						xhr.setRequestHeader('X-File-Params', window.encodeURIComponent(prms));
-						xhr.send(file);
-					}
-				});
-
+							};
+							xhr.open(
+								'POST',
+								'assets/engines/' + opts.engine + '/' + opts.handler + '?method=doDropUpload&returnType=JSON',
+								true
+							);
+							xhr.setRequestHeader('Content-Type', file.type);
+							xhr.setRequestHeader('X-File-Name', window.encodeURIComponent(file.name) || window.encodeURIComponent(file.fileName));
+							xhr.setRequestHeader('X-File-Params', window.encodeURIComponent(prms));
+							xhr.send(file);
+						}
+					});
+				}
 			}
 
 			e.stopPropagation();
@@ -1597,11 +1619,30 @@
 
 		}
 
+		function getUrlPath(url) {
+			var urlArr,
+				dir = "";
+			if (url) {
+				urlArr = url.split('/');
+				$.each(urlArr, function(a, b) {
+					if (a !== 1 && a < urlArr.length - 1 && b.length > 0) {
+						dir += b + '/';
+					} else if (a === 1) {
+						dir += '/';
+					}
+				});
+				return dir;
+			}
+			return 'undefined';
+		}
+
 		// initial test to see if our handler exists
 		function getHandler() {
 			var json,
 				re = new RegExp('/\/|\\/', 'gim'),
 				pathArr;
+
+			console.log(getUrlPath(window.location.toString()));
 
 			sys.basePath = $.cookie('cj_dir') || (opts.baseRelPath.length > 0 ? opts.baseRelPath[0] : null);
 
@@ -1670,9 +1711,7 @@
 			if (typeof options === 'object' || (typeof options === 'string' && options === 'init')) {
 
 				$obj.html(
-					'<div id="sidebar"></div>' +
-					'<div id="browser"></div>' +
-					'<div id="header">' +
+					'<div id="header" class="ui-widget-header">' +
 						'<form name="CJFileBrowserForm" id="CJFileBrowserForm" action="javascript:void(0);" method="post" enctype="multipart/form-data">' +
 							'<div class="padder">' +
 								'<div id="directoryOptions">' +
@@ -1692,6 +1731,8 @@
 							'</div>' +
 						'</form>' +
 					'</div>' +
+					'<div id="sidebar" class="ui-widget-content"></div>' +
+					'<div id="browser" class="ui-widget-content"></div>' +
 					'<div id="footer"></div>'
 				);
 
