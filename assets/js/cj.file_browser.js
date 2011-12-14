@@ -1619,41 +1619,24 @@
 
 		}
 
-		function getUrlPath(url) {
-			var urlArr,
-				dir = "";
-			if (url) {
-				urlArr = url.split('/');
-				$.each(urlArr, function(a, b) {
-					if (a !== 1 && a < urlArr.length - 1 && b.length > 0) {
-						dir += b + '/';
-					} else if (a === 1) {
-						dir += '/';
-					}
-				});
-				return dir;
-			}
-			return 'undefined';
-		}
-
 		// initial test to see if our handler exists
 		function getHandler() {
-			var json,
-				re = new RegExp('/\/|\\/', 'gim'),
-				pathArr;
-
-			console.log(getUrlPath(window.location.toString()));
-
-			sys.basePath = $.cookie('cj_dir') || (opts.baseRelPath.length > 0 ? opts.baseRelPath[0] : null);
+			var json, pathArr,
+				re = new RegExp('/\/|\\/', 'gim');
 
 			// need to set the basePath based on cookie (if valid) or the opts.baseRelPath
+			sys.basePath = $.cookie('cj_dir') || (opts.baseRelPath.length > 0 ? opts.baseRelPath[0] : null);
 			if (sys.basePath && sys.basePath.indexOf(opts.baseRelPath[0]) > -1) {
 				// the path is valid, but we need to loop through it to populate our path object
-				sys.basePath = sys.basePath.length > 1 ? sys.basePath.substring(1, sys.basePath.length - 1) : '/';
-				pathArr = sys.basePath.split(re);
-				$.each(pathArr, function(a, b) {
-					opts.baseRelPath.push(opts.baseRelPath[opts.baseRelPath.length - 1] + b + '/');
-				});
+				sys.basePath = sys.basePath.length > 1 ? (sys.basePath.replace(opts.baseRelPath[0], '')).substring(1, sys.basePath.length - 1) : '/';
+				if (sys.basePath.length > 0) {
+					pathArr = sys.basePath.split(re);
+					$.each(pathArr, function(a, b) {
+						opts.baseRelPath.push(opts.baseRelPath[opts.baseRelPath.length - 1] + b + '/');
+					});
+				} else {
+					sys.basePath = opts.baseRelPath[0];
+				}
 			} else {
 				sys.basePath = opts.baseRelPath[0];
 			}
