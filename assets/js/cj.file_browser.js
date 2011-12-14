@@ -234,7 +234,12 @@
 		 */
 
 		// adds "..." in the middle of long filenames
-		function doShortentFileName(str, len) {
+		/*
+		function doShortentFileName(str, len, id) {
+			var sidew = $('#sidebar').width(),
+				spanw = $('#sidebar #sidebar_ID' + id).width();
+			console.log(sidew);
+			console.log(spanw);
 			if (typeof str === 'string' && str.length > len) {
 				var h = parseInt(len / 2, 10);
 				return str.substring(0, h) + '...' + str.substring(str.length - h, str.length);
@@ -242,6 +247,7 @@
 				return str;
 			}
 		}
+		*/
 
 		// clears the internal timer
 		function clearTimer() {
@@ -347,8 +353,8 @@
 									'<div class="label"><\/div>' +
 									'<div class="content"><\/div>' +
 									'<div class="buttons">' +
-										'<button type="button" name="buttonCANCEL" id="buttonCANCEL" class="input_button">Cancel<\/button>' +
-										'<button type="button" name="buttonOK" id="buttonOK" class="input_button">OK<\/button>' +
+										'<button name="buttonCANCEL" id="buttonCANCEL" class="input_button">Cancel<\/button>' +
+										'<button name="buttonOK" id="buttonOK" class="input_button">OK<\/button>' +
 									'<\/div>' +
 								'<\/div>' +
 							'<\/div>' +
@@ -372,7 +378,7 @@
 									'<div class="label"><\/div>' +
 									'<div class="content"><\/div>' +
 									'<div class="buttons">' +
-										'<button type="button" name="buttonOK" id="buttonOK" class="input_button">OK<\/button>' +
+										'<button name="buttonOK" id="buttonOK" class="input_button">OK<\/button>' +
 									'<\/div>' +
 								'<\/div>' +
 							'<\/div>' +
@@ -449,7 +455,7 @@
 
 		// disable all options (used before performing various options)
 		function resetAllOptions() {
-			$('#directoryOut,#directoryIn,#directories,#newfolder,#fileDelete,#fileSelect').attr('disabled', true);
+			$('#directoryOut,#directoryIn,#directories,#newfolder,#fileDelete,#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
 			$('#directories option').remove();
 			updateDisplayStats('', 0, 0);
 		}
@@ -464,9 +470,9 @@
 			});
 			// need to see if we have more than one directory and change the directory NAVIGATION accordingly
 			if (opts.baseRelPath.length > 1 && sys.currentPathIdx > 0) {
-				$('#directoryOut').attr('disabled', false);
+				$('#directoryOut').attr('disabled', false).removeClass('ui-state-disabled');
 			} else {
-				$('#directoryOut').attr('disabled', true);
+				$('#directoryOut').attr('disabled', true).addClass('ui-state-disabled');
 			}
 		}
 
@@ -529,7 +535,7 @@
 		function getDirectoryImages() {
 			// show image previews?
 			if (opts.showImgPreview) {
-				doLoadDirectoryImage($('#browser ul li.GIF, #browser ul li.JPG, #browser ul li.PNG'), 0, sys.currentPathIdx);
+				doLoadDirectoryImage($('#browser ul li.GIF,#browser ul li.JPG,#browser ul li.PNG'), 0, sys.currentPathIdx);
 			}
 		}
 
@@ -707,7 +713,7 @@
 					lis = $('<li>').attr({
 						id: 'sidebar_ID' + intIndex,
 						rel: objValue.TYPE === 'FILE' ? 'File' : 'Directory'
-					}).addClass(objValue.EXTENSION).html('<span rel="' + objValue.NAME + '">' + doShortentFileName(objValue.NAME, 20) + '<\/span>');
+					}).addClass(objValue.EXTENSION).html('<span rel="' + objValue.NAME + '">' + objValue.NAME + '<\/span>');
 
 					// create our BROWSER list items
 					lib = $('<li>').attr({
@@ -730,14 +736,14 @@
 						'<div class="icon" rel="' + objValue.NAME + '">' +
 							(typeof objValue.WIDTH === 'number' && typeof objValue.HEIGHT === 'number' ? '<div class="imgHolder"><\/div><div class="mask"><\/div>' : '') +
 						'<\/div>' +
-						'<div class="name">' + doShortentFileName(objValue.NAME, 20) + '<\/div>' +
-						'<div class="namefull">' + objValue.NAME + '<\/div>' +
-						(objValue.TYPE === 'FILE' ? '<div class="size">' + displayFileSize(parseInt(objValue.SIZE, 10)) + '<\/div>' : '') +
-
-						(parseInt(objValue.WIDTH, 10) && parseInt(objValue.HEIGHT, 10) ? '<div class="dimensions"><span class="width">' + parseInt(objValue.WIDTH, 10) + '<\/span> x <span class="height">' + parseInt(objValue.HEIGHT, 10) + '<\/span> pixels<\/div>' : '') +
-
-						(objValue.DATELASTMODIFIED.length > 0 ? '<div class="modified">' + dateFormat(objValue.DATELASTMODIFIED, 'mmm dS, yyyy, h:MM:ss TT') + '<\/div>' : '') +
-						'<div class="mimeType">' + objValue.MIME + '<\/div>'
+						'<div class="nameinfo cj-state-default ui-corner-all">' +
+							'<div class="name">' + objValue.NAME + '<\/div>' +
+							'<div class="namefull">' + objValue.NAME + '<\/div>' +
+							(objValue.TYPE === 'FILE' ? '<div class="size">' + displayFileSize(parseInt(objValue.SIZE, 10)) + '<\/div>' : '') +
+							(parseInt(objValue.WIDTH, 10) && parseInt(objValue.HEIGHT, 10) ? '<div class="dimensions"><span class="width">' + parseInt(objValue.WIDTH, 10) + '<\/span> x <span class="height">' + parseInt(objValue.HEIGHT, 10) + '<\/span> pixels<\/div>' : '') +
+							(objValue.DATELASTMODIFIED.length > 0 ? '<div class="modified">' + dateFormat(objValue.DATELASTMODIFIED, 'mmm dS, yyyy, h:MM:ss TT') + '<\/div>' : '') +
+							'<div class="mimeType">' + objValue.MIME + '<\/div>' +
+						'</div>'
 					);
 
 					// add the file size to the directories total
@@ -751,31 +757,36 @@
 					// add the direct list to the BROWSER and SIDEBAR windows
 					$('#sidebar ul').append(lis);
 					$('#browser ul').append(lib);
+
+					// truncate the file names
+					$('#sidebar ul li span,#browser ul li .name').textTruncate();
+
 				});
 
 				// set up our hover and click actions for the SIDEBAR window
 				$('#sidebar ul li').on('mouseenter mousedown', function () {
-					$(this).addClass('hovering');
+					$(this).addClass('hovering ui-state-highlight');
 				}).on('mouseleave mouseup', function () {
-					$(this).removeClass('hovering');
+					$(this).removeClass('hovering ui-state-highlight');
 				}).on('click', function (e) {
 					var $this = $(this),
-						$twin = $('#browser #' + ($this.attr('id')).replace('sidebar_ID', 'browser_ID'));
+						$twin = $('#browser #' + ($this.attr('id')).replace('sidebar_ID', 'browser_ID')),
+						$name = $twin.find('.nameinfo');
 					if ($this.attr('rel') === 'File') {
-						$('#directoryIn').attr('disabled', true).off();
+						$('#directoryIn').attr('disabled', true).addClass('ui-state-disabled').off();
 						if ($this.hasClass('selected')) {
-							$this.removeClass('selected');
-							$twin.removeClass('selected');
-							$('#fileSelect,#fileDelete').attr('disabled', true);
+							$this.removeClass('selected ui-state-active');
+							$name.removeClass('selected ui-state-active');
+							$('#fileSelect,#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 						} else {
-							$('#sidebar ul li,#browser ul li').removeClass('selected');
-							$this.addClass('selected');
-							$twin.addClass('selected');
-							$('#fileSelect').attr('disabled', false);
+							$('#sidebar ul li,#browser ul li .nameinfo').removeClass('selected ui-state-active');
+							$this.addClass('selected ui-state-active');
+							$name.addClass('selected ui-state-active');
+							$('#fileSelect').attr('disabled', false).removeClass('ui-state-disabled');
 							if ($.inArray('fileDelete', opts.actions) > -1) {
-								$('#fileDelete').attr('disabled', false);
+								$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
 							} else {
-								$('#fileDelete').attr('disabled', true);
+								$('#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 							}
 							$('#browser').animate({
 								scrollTop: $('#browser').scrollTop() + $twin.offset().top - $twin.height()
@@ -783,19 +794,19 @@
 						}
 					} else if ($this.attr('rel') === 'Directory') {
 						if ($this.hasClass('selected')) {
-							$this.removeClass('selected');
-							$twin.removeClass('selected');
-							$('#fileSelect').attr('disabled', true);
+							$this.removeClass('selected ui-state-active');
+							$name.removeClass('selected ui-state-active');
+							$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
 							$('#directoryIn').attr('disabled', true).off();
 						} else {
-							$('#sidebar ul li,#browser ul li').removeClass('selected');
-							$this.addClass('selected');
-							$twin.addClass('selected');
-							$('#fileSelect').attr('disabled', true);
+							$('#sidebar ul li,#browser ul li .nameinfo').removeClass('selected ui-state-active');
+							$this.addClass('selected ui-state-active');
+							$name.addClass('selected ui-state-active');
+							$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
 							if ($.inArray('deleteDirectory', opts.actions) > -1) {
-								$('#fileDelete').attr('disabled', false);
+								$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
 							} else {
-								$('#fileDelete').attr('disabled', true);
+								$('#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 							}
 							$('#browser').animate({
 								scrollTop: $('#browser').scrollTop() + $twin.offset().top - $twin.height()
@@ -814,6 +825,7 @@
 						}
 					}
 					e.stopImmediatePropagation();
+					return false;
 				}).on('dblclick', function (e) {
 					// double-click action for directories, might allow this for files eventually.
 					var $this = $(this),
@@ -831,51 +843,53 @@
 						});
 					}
 					e.stopImmediatePropagation();
+					return false;
 				});
 
 				// set up our hover and click actions for the BROWSER window
 				$('#browser ul li').on('mouseenter mousedown', function () {
-					$(this).addClass('hovering');
+					$(this).find('.nameinfo').addClass('hovering ui-state-highlight');
 				}).on('mouseleave mouseup', function () {
-					$(this).removeClass('hovering');
+					$(this).find('.nameinfo').removeClass('hovering ui-state-highlight');
 				}).on('click', function (e) {
 					var $this = $(this),
+						$name = $this.find('.nameinfo'),
 						$twin = $('#sidebar #' + ($this.attr('id')).replace('browser_ID', 'sidebar_ID'));
 					if ($this.attr('rel') === 'File') {
 						$('#directoryIn').attr('disabled', true).off();
-						if ($this.hasClass('selected')) {
-							$this.removeClass('selected');
-							$twin.removeClass('selected');
-							$('#fileSelect,#fileDelete').attr('disabled', true);
+						if ($name.hasClass('selected')) {
+							$name.removeClass('selected ui-state-active');
+							$twin.removeClass('selected ui-state-active');
+							$('#fileSelect,#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 						} else {
-							$('#sidebar ul li,#browser ul li').removeClass('selected');
-							$this.addClass('selected');
-							$twin.addClass('selected');
-							$('#fileSelect').attr('disabled', false);
+							$('#sidebar ul li,#browser ul li .nameinfo').removeClass('selected ui-state-active');
+							$name.addClass('selected ui-state-active');
+							$twin.addClass('selected ui-state-active');
+							$('#fileSelect').attr('disabled', false).removeClass('ui-state-disabled');
 							if ($.inArray('fileDelete', opts.actions) > -1) {
-								$('#fileDelete').attr('disabled', false);
+								$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
 							} else {
-								$('#fileDelete').attr('disabled', true);
+								$('#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 							}
 							$('#sidebar').animate({
 								scrollTop: $('#sidebar').scrollTop() + $twin.offset().top - 43
 							}, 'fast'); // #sidebar css position top = 43px
 						}
 					} else if ($this.attr('rel') === 'Directory') {
-						if ($this.hasClass('selected')) {
-							$this.removeClass('selected');
-							$twin.removeClass('selected');
-							$('#fileSelect').attr('disabled', true);
+						if ($name.hasClass('selected')) {
+							$name.removeClass('selected ui-state-active');
+							$twin.removeClass('selected ui-state-active');
+							$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
 							$('#directoryIn').attr('disabled', true).off();
 						} else {
-							$('#sidebar ul li,#browser ul li').removeClass('selected');
-							$this.addClass('selected');
-							$twin.addClass('selected');
-							$('#fileSelect').attr('disabled', true);
+							$('#sidebar ul li,#browser ul li .nameinfo').removeClass('selected ui-state-active');
+							$name.addClass('selected ui-state-active');
+							$twin.addClass('selected ui-state-active');
+							$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
 							if ($.inArray('deleteDirectory', opts.actions) > -1) {
-								$('#fileDelete').attr('disabled', false);
+								$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
 							} else {
-								$('#fileDelete').attr('disabled', true);
+								$('#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 							}
 							$('#sidebar').animate({
 								scrollTop: $('#sidebar').scrollTop() + $twin.offset().top - 43
@@ -894,6 +908,7 @@
 						}
 					}
 					e.stopImmediatePropagation();
+					return false;
 				}).on('dblclick', function (e) {
 					// double-click action for directories, might allow this for files eventually.
 					var $this = $(this),
@@ -911,6 +926,7 @@
 						});
 					}
 					e.stopImmediatePropagation();
+					return false;
 				}).draggable({
 					cursor: 'move',
 					helper: 'clone',
@@ -929,10 +945,10 @@
 				// setup droppable's for directories
 				$('#browser ul li[rel="Directory"]').droppable({
 					over: function(event, ui) {
-						$(this).addClass('hovering');
+						$(this).addClass('hovering ui-state-highlight');
 					},
 					out: function(event, ui) {
-						$(this).removeClass('hovering');
+						$(this).removeClass('hovering ui-state-highlight');
 					},
 					drop: function(event, ui) {
 						var $this = $(this);
@@ -1176,6 +1192,7 @@
 			// create a modal box background (make sure click throughs don't happen)
 			$('body').append('<div id="CJModalBGround"><\/div>').on('click', function (e) {
 				e.stopImmediatePropagation();
+				return false;
 			});
 
 			// start our progress bar and do init stuff
@@ -1206,11 +1223,12 @@
 
 			// set up deselect if the user clicks the browser window
 			$('#sidebar,#browser').on('click', function (e) {
-				$('#sidebar li').removeClass('selected');
-				$('#browser li').removeClass('selected');
-				$('#fileSelect,#fileDelete').attr('disabled', true);
+				$('#sidebar li').removeClass('selected ui-state-active');
+				$('#browser li .nameinfo').removeClass('selected ui-state-active');
+				$('#fileSelect,#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 				$('#directoryIn').attr('disabled', true).off();
 				e.stopImmediatePropagation();
+				return false;
 			});
 
 			// setup droppable files for the browser
@@ -1235,6 +1253,7 @@
 							displayDirListing();
 						});
 					}
+					return false;
 				});
 
 				// set up the directories SELECT menu
@@ -1257,7 +1276,7 @@
 				$('#newfolder').mouseup(function () {
 					$(this).css({
 						'background-position': '0px 0px'
-					}).attr('disabled', true);
+					}).attr('disabled', true).addClass('ui-state-disabled');
 					displayDialog({
 						type: 'confirm',
 						state: 'show',
@@ -1278,8 +1297,8 @@
 									state: 'show',
 									label: 'Creating new directory...'
 								});
-								$('#fileSelect').attr('disabled', true);
-								$('#fileDelete').attr('disabled', true);
+								$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
+								$('#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 								// set a nice timer to ensure that the CFC does not timeout
 								sys.timer = window.setTimeout(function () {
 									displayDialog({
@@ -1288,7 +1307,7 @@
 										label: 'Oops! There was a problem',
 										content: 'The system timed out attempting to create a new directory.'
 									});
-									$('#newfolder').attr('disabled', false);
+									$('#newfolder').attr('disabled', false).removeClass('ui-state-disabled');
 								}, parseInt(opts.timeOut, 10) * 1000);
 								json = $.parseJSON(
 								$.ajax({
@@ -1315,10 +1334,10 @@
 												label: 'Oops! There was a problem',
 												content: data.msg
 											});
-											$('#newfolder').attr('disabled', false);
+											$('#newfolder').attr('disabled', false).removeClass('ui-state-disabled');
 										} else {
 											clearTimer();
-											$('#newfolder').attr('disabled', false);
+											$('#newfolder').attr('disabled', false).removeClass('ui-state-disabled');
 											doDirListing(function() {
 												displayDirListing();
 											});
@@ -1335,13 +1354,13 @@
 											label: 'Oops! There was a problem',
 											content: 'Problems communicating with the CFC. Unexpected results returned for newfolder (click).'
 										});
-										$('#newfolder').attr('disabled', false);
+										$('#newfolder').attr('disabled', false).removeClass('ui-state-disabled');
 									}
 								}).responseText);
 							}
 						},
 						cbCancel: function () {
-							$('#newfolder').attr('disabled', false);
+							$('#newfolder').attr('disabled', false).removeClass('ui-state-disabled');
 						}
 					});
 				});
@@ -1356,7 +1375,7 @@
 					if ((type === 'directory' && $.inArray('deleteDirectory', opts.actions) > -1) || (type === 'file' && $.inArray('fileDelete', opts.actions) > -1)) {
 						$(this).css({
 							'background-position': '0px 0px'
-						}).attr('disabled', true);
+						}).attr('disabled', true).addClass('ui-state-disabled');
 						displayDialog({
 							type: 'confirm',
 							state: 'show',
@@ -1372,8 +1391,8 @@
 										state: 'show',
 										label: 'Deleting file...'
 									});
-									$('#fileSelect').attr('disabled', true);
-									$('#fileDelete').attr('disabled', true);
+									$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
+									$('#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 									// set a nice timer to ensure that the CFC does not timeout
 									sys.timer = window.setTimeout(function () {
 										displayDialog({
@@ -1382,7 +1401,7 @@
 											label: 'Oops! There was a problem',
 											content: 'The system timed out attempting to delete a file.'
 										});
-										$('#newfolder').attr('disabled', false);
+										$('#newfolder').attr('disabled', false).removeClass('ui-state-disabled');
 									}, parseInt(opts.timeOut, 10) * 1000);
 
 									// delete the file or directory
@@ -1412,10 +1431,10 @@
 													label: 'Oops! There was a problem',
 													content: (typeof data.msg === 'string' && data.msg !== '') ? data.msg : 'Problems communicating with the CFC when attempting to delete a ' + curType.toLowerCase() + '.'
 												});
-												$('#fileDelete').attr('disabled', false);
+												$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
 											} else {
 												clearTimer();
-												$('#fileDelete').attr('disabled', false);
+												$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
 												doDirListing(function() {
 													displayDirListing();
 												});
@@ -1432,13 +1451,13 @@
 												label: 'Oops! There was a problem',
 												content: 'Problems communicating with the CFC. Unexpected results returned for fileDelete (click).'
 											});
-											$('#fileDelete').attr('disabled', false);
+											$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
 										}
 									}).responseText);
 								}
 							},
 							cbCancel: function () {
-								$('#fileDelete').attr('disabled', false);
+								$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
 							}
 						});
 					}
@@ -1453,7 +1472,7 @@
 					var $this = $(this);
 					$this.css({
 						'background-position': '0px 0px'
-					}).attr('disabled', true);
+					}).attr('disabled', true).addClass('ui-state-disabled');
 					displayDialog({
 						type: 'confirm',
 						state: 'show',
@@ -1482,12 +1501,12 @@
 									type: 'confirm',
 									state: 'hide'
 								});
-								$('#fileUpload').attr('disabled', false);
+								$('#fileUpload').attr('disabled', false).removeClass('ui-state-disabled');
 								$('#CJFileBrowserForm').submit();
 							}
 						},
 						cbCancel: function () {
-							$('#fileUpload').attr('disabled', false);
+							$('#fileUpload').attr('disabled', false).removeClass('ui-state-disabled');
 						}
 					});
 					// fix the file upload input
@@ -1504,7 +1523,7 @@
 					}), $('<img>').attr({
 						src: 'assets/images/bg_fileselect.png'
 					}).css('z-index', -1))).addClass('clearfix');
-				}).attr('disabled', false);
+				}).attr('disabled', false).removeClass('ui-state-disabled');
 
 				// handle the FORM submit
 				$('#CJFileBrowserForm').submit(function () {
@@ -1567,7 +1586,7 @@
 						});
 						jFrame.remove();
 						$('#CJFileBrowserForm').find('.hider').remove();
-						$('#fileUpload').attr('disabled', false);
+						$('#fileUpload').attr('disabled', false).removeClass('ui-state-disabled');
 					}, parseInt(opts.timeOut, 10) * 1000);
 
 					// We don't know where we are at. So we need to determine the path to do the form submit.
@@ -1632,7 +1651,11 @@
 				if (sys.basePath.length > 0) {
 					pathArr = sys.basePath.split(re);
 					$.each(pathArr, function(a, b) {
-						opts.baseRelPath.push( (a > 0 ? opts.baseRelPath[opts.baseRelPath.length - 1] : '/') + b + (a < pathArr.length - 1 ? '/' : ''));
+						var path = (a > 0 ? opts.baseRelPath[opts.baseRelPath.length - 1] : '/') + b + (a < pathArr.length - 1 ? '/' : '');
+						path.replace('//', '/');
+						if (path.length > 0 && opts.baseRelPath.indexOf(path) < 0) {
+							opts.baseRelPath.push(path);
+						}
 					});
 					sys.currentPathIdx = opts.baseRelPath.length - 1;
 					sys.basePath = opts.baseRelPath[sys.currentPathIdx];
@@ -1711,11 +1734,11 @@
 			$slide.css({
 				position: 'absolute',
 				left: (c - 2) + 'px',
-				top: ($wrap.find('header').height() + $('section h2.pageTitle').height()) + 'px',
-				bottom: $wrap.find('footer').height() + 'px',
+				top: '0px',
+				bottom: '0px',
 				display: 'block',
 				width: '10px',
-				height: $('#sidebar').height(),
+				height: $('#sidebar').height() + 2, // border adjust
 				borderLeft: '4px solid #74c507',
 				opacity: 0,
 				zIndex: 9999
@@ -1766,6 +1789,11 @@
 					});
 					delta = null;
 					timer = null;
+					// truncate the file names
+					console.log(x);
+					$('#sidebar ul li span').each(function() {
+						$(this).text($(this).attr('title'));
+					}).textTruncate();
 				}
 			}).on('mousemove', function(e) {
 				var x = 0;
@@ -1790,32 +1818,42 @@
 			if (typeof options === 'object' || (typeof options === 'string' && options === 'init')) {
 
 				$obj.html(
-					'<div id="header" class="ui-widget-header">' +
-						'<form name="CJFileBrowserForm" id="CJFileBrowserForm" action="javascript:void(0);" method="post" enctype="multipart/form-data">' +
-							'<div class="padder">' +
+					'<div id="header">' +
+						'<div class="cj-margins ui-widget-header clearfix">' +
+							'<form name="CJFileBrowserForm" id="CJFileBrowserForm" action="javascript:void(0);" method="post" enctype="multipart/form-data">' +
 								'<div id="directoryOptions">' +
-									'<button name="directoryOut" id="directoryOut" disabled="disabled"><span>Back Directory</span></button>' +
-									'<button name="directoryIn" id="directoryIn" disabled="disabled"><span>Forward Directory</span></button>' +
+									'<span class="ui-buttonset">' +
+										'<button name="directoryOut" id="directoryOut" class="cj-button cj-button-icon-left ui-button ui-widget ui-state-default ui-button-icon-only ui-corner-left" role="button" aria-disabled="false" title="Out"><span class="ui-button-icon-primary ui-icon ui-icon-circle-arrow-w"></span><span class="ui-button-text">Out</span></button>' +
+										'<button name="directoryIn" id="directoryIn" class="cj-button cj-button-icon-left ui-button ui-widget ui-state-default ui-button-icon-only ui-corner-right" role="button" aria-disabled="false" title="In"><span class="ui-button-icon-primary ui-icon ui-icon-circle-arrow-e"></span><span class="ui-button-text">In</span></button>' +
+									'</span>' +
+									'<button name="newfolder" id="newfolder" class="cj-button cj-button-icon-left ui-button ui-widget ui-state-default ui-button-text-icons ui-corner-all" role="button" aria-disabled="false" title="Create Folder"><span class="ui-button-icon-primary ui-icon ui-icon-folder-collapsed"></span><span class="ui-button-text">Create Folder</span></button>' +
+									'<button name="fileDelete" id="fileDelete" class="cj-button cj-button-icon-left ui-button ui-widget ui-state-default ui-button-text-icons ui-corner-all" role="button" aria-disabled="false" title="Delete"><span class="ui-button-icon-primary ui-icon ui-icon-trash"></span><span class="ui-button-text">Delete</span></button>' +
+									'<button name="fileUpload" id="fileUpload" class="cj-button cj-button-icon-left ui-button ui-widget ui-state-default ui-button-text-icons ui-corner-all" role="button" aria-disabled="false" title="Upload"><span class="ui-button-icon-primary ui-icon ui-icon-document"></span><span class="ui-button-text">Upload</span></button>' +
+									/*
+									'<button name="directoryPath" id="directoryPath" class="cj-button cj-button-icon-left ui-button ui-widget ui-state-default ui-button-text-only ui-corner-all" role="button" aria-disabled="false" title="Path"><span class="ui-button-text">Path: </span></button>' +
 									'<div class="container">' +
-										'<label for="directories">Directories: </label>' +
-										'<select name="directories" id="directories" disabled="disabled"><option value=""></option></select>' +
+										'<label for="directories" class="ui-label">Directories: </label>' +
+										'<select name="directories" id="directories" class="cj-button ui-button ui-widget ui-state-default ui-corner-all"><option value=""></option></select>' +
 									'</div>' +
+									*/
 								'</div>' +
 								'<div id="fileOptions">' +
-									'<button type="button" name="newfolder" id="newfolder" disabled="disabled"><span>Create Folder</span></button>' +
-									'<button type="button" name="fileUpload" id="fileUpload" disabled="disabled"><span>Upload</span></button>' +
-									'<button type="button" name="fileDelete" id="fileDelete" disabled="disabled"><span>Delete</span></button>' +
-									'<button type="button" name="fileSelect" id="fileSelect" disabled="disabled"><span>Select</span></button>' +
-								'</div>' +
-							'</div>' +
-						'</form>' +
+									'<button name="fileSelect" id="fileSelect" class="cj-button cj-button-icon-left ui-button ui-widget ui-state-default ui-button-text-icons ui-corner-all" aria-disabled="false" role="button" title="Select"><span class="ui-button-icon-primary ui-icon ui-icon-circle-check"></span><span class="ui-button-text">Select</span></button>' +
+									'</div>' +
+							'</form>' +
+						'</div>' +
 					'</div>' +
 					'<div id="content">' +
-						'<div id="sidebar"></div>' +
+						'<div id="sidebar" class="ui-state-highlight"></div>' +
 						'<div id="browser"></div>' +
 					'</div>' +
 					'<div id="footer"></div>'
 				);
+
+				// fix sidebar/browser top margin
+				$('#content').css({
+					top: $('#header').height()
+				});
 
 				// setup the footer
 				$obj.find('#footer').append('<div class="callout"><div class="margins">CJ File Browser <strong id="CJVersion">v' + sys.version + '<\/strong>. Created by <a href="http://www.cjboco.com/" target="_blank" title="Creative Juice Bo. Co.">Creative Juice Bo. Co.<\/a><\/div><\/div>');

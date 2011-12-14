@@ -42,7 +42,6 @@ body {
 	margin: 0;
 	font-size: 13px;
 	line-height: 1.231;
-	min-height: 100%;
 }
 
 body,
@@ -294,9 +293,16 @@ td {
  ========================================================================== */
 
 
+
+
+/*
+	tinyMCE sets some style rules, hence I have to force overide them.
+*/
+
+html,
 body {
-	font-family: "Arial", "Helvetica", "Verdana", "sans-serif";
-	font-size: 10px;
+	font-size: 100%;
+	font-family: "Century Gothic", Arial, Helvetica, sans-serif;
 }
 
 form {
@@ -305,18 +311,13 @@ form {
 	padding: 0;
 }
 
-:link, :visited {
-	border-bottom: 0;
-}
-
-a:link,
-a:visited {
-	color: #fbf9ee;
+a {
+	color: #82d727 !important;
 	text-decoration: none;
 }
 
-a:hover,
-a:active {
+a:hover {
+	color: #b4d727 !important;
 	text-decoration: underline;
 }
 
@@ -344,6 +345,36 @@ a:active {
 	visibility: hidden;
 }
 
+.input_button {
+	font-size: 11px;
+	height: auto;
+	border: 1px solid #777;
+	margin: 0 2px;
+	padding: 3px 10px;
+	background: #d3e883 url(../images/bg_btn_normal.jpg) repeat-x left center;
+	background-image: -moz-linear-gradient(top, #ffffff 0%, #d3e883 49%, #c2df51 50%, #c2df53 100%);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(49%,#d3e883), color-stop(50%,#c2df51), color-stop(100%,#c2df53));
+	background-image: -webkit-linear-gradient(top, #ffffff 0%,#d3e883 49%,#c2df51 50%,#c2df53 100%);
+	background-image: -o-linear-gradient(top, #ffffff 0%,#d3e883 49%,#c2df51 50%,#c2df53 100%);
+	background-image: -ms-linear-gradient(top, #ffffff 0%,#d3e883 49%,#c2df51 50%,#c2df53 100%);
+	background-image: linear-gradient(top, #ffffff 0%,#d3e883 49%,#c2df51 50%,#c2df53 100%);
+}
+
+:hover.input_button {
+	background: #88c840 url(../images/bg_btn_normal_hover.jpg);
+	background-image: -moz-linear-gradient(top, #88c840 0%, #bddd4c 100%);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#88c840), color-stop(100%,#bddd4c));
+	background-image: -webkit-linear-gradient(top, #88c840 0%,#bddd4c 100%);
+	background-image: -o-linear-gradient(top, #88c840 0%,#bddd4c 100%);
+	background-image: -ms-linear-gradient(top, #88c840 0%,#bddd4c 100%);
+	background-image: linear-gradient(top, #88c840 0%,#bddd4c 100%);
+}
+
+.input_button[disabled],
+.input_button[disabled="disabled"] {
+	background: #ccc;
+}
+
 .hider {
 	display: none
 }
@@ -369,21 +400,30 @@ a:active {
 	width: 100%;
 	height: auto;
 	overflow: hidden;
+	font-family: Arial, Helvetica, sans-serif;
 }
 
 #header {
-	position: absolute;
+	position: fixed;
 	top: 0px;
 	left: 0px;
 	display: block;
 	width: 100%;
-	height: auto;
+	height: 42px;
+	background: #e6e6e6 url(../images/bg_white_blend_top_42x42.png) repeat-x left center;
+	background-image: -moz-linear-gradient(top, #fcfcfc 0%, #ebebeb 49%, #e6e6e6 50%, #e6e6e6 100%);
+	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#fcfcfc), color-stop(49%,#ebebeb), color-stop(50%,#e6e6e6), color-stop(100%,#e6e6e6));
+	background-image: -webkit-linear-gradient(top, #fcfcfc 0%,#ebebeb 49%,#e6e6e6 50%,#e6e6e6 100%);
+	background-image: -o-linear-gradient(top, #fcfcfc 0%,#ebebeb 49%,#e6e6e6 50%,#e6e6e6 100%);
+	background-image: -ms-linear-gradient(top, #fcfcfc 0%,#ebebeb 49%,#e6e6e6 50%,#e6e6e6 100%);
+	background-image: linear-gradient(top, #fcfcfc 0%,#ebebeb 49%,#e6e6e6 50%,#e6e6e6 100%);
+	border-bottom: 1px solid #aaa;
 	overflow: hidden;
 }
 
 #content {
 	position: fixed;
-	top: 0px;
+	top: 44px;
 	left: 0px;
 	bottom: 24px;
 	right: 0px;
@@ -401,6 +441,7 @@ a:active {
 	width: 200px;
 	height: auto;
 	overflow: auto;
+	background: #f3f7e6;
 }
 
 #browser {
@@ -411,7 +452,7 @@ a:active {
 	right: 0px;
 	background: #fff;
 	overflow: auto;
-	border-left: 1px solid rgba(0,0,0,0.2);
+	border-left: 1px solid #aaa;
 }
 
 #footer {
@@ -447,38 +488,109 @@ a:active {
 	header elements
 **********************************/
 #header {
-	display: block;
-	width: 100%;
-	height: auto;
-	overflow: hidden;
+	font-size: .7em;
 }
 
 #header #directoryOptions {
-	display: block;
-	width: 50%;
-	height: auto;
-	float: left;
+	position: absolute;
+	top: 6px;
+	left: 10px;
 }
-
-#header #directoryOptions button,
-#header #directoryOptions .container,
-#header #directoryOptions .ui-buttonset {
-	float: left;
-}
-
-#header #directoryOptions .ui-buttonset { margin-right: 10px; }
 
 #header #fileOptions {
-	display: block;
-	width: 50%;
-	height: auto;
-	float: left;
+	position: absolute;
+	top: 6px;
+	right: 10px;
 	text-align: right;
 }
 
-#header #fileOptions button,
-#header #fileOptions .container {
-	float: right;
+#header button {
+	display: block;
+	width: 31px;
+	height: 32px;
+	margin: 0;
+	padding: 0;
+	float: left;
+	clear: none;
+	background: transparent;
+	border: none;
+}
+
+#header button span {
+	display: none;
+}
+
+#header button:hover {
+	background-position: 0px -32px;
+}
+
+#header button:active {
+	background-position: 0px -96px;
+}
+
+#header button[disabled],
+#header button[disabled="disabled"],
+#header button.disabled {
+	background-position: 0px -64px !important;
+	cursor: default !important;
+}
+
+#header button.deactive {
+	display: none;
+}
+
+/*
+	header buttons
+**********************************/
+#header #fileOptions button#iconview {
+	background: url(../images/icn_iconview.png) no-repeat 0px 0px;
+}
+
+#header #fileOptions button#listview {
+	background: url(../images/icn_listview.png) no-repeat 0px 0px;
+}
+
+#header #fileOptions button#newfolder {
+	background: url(../images/icn_newfolder.png) no-repeat 0px 0px;
+}
+
+#header #fileOptions button#fileUpload {
+	background: url(../images/icn_uploadfile.png) no-repeat 0px 0px;
+}
+
+#header #fileOptions button#fileDelete {
+	background: url(../images/icn_deletefile.png) no-repeat 0px 0px;
+}
+
+#header #fileOptions button#fileSelect {
+	background: url(../images/icn_selectfile.png) no-repeat 0px 0px;
+}
+
+#header #directoryOptions button#directoryOut {
+	background: url(../images/icn_directoryout.png) no-repeat 0px 0px;
+}
+
+#header #directoryOptions button#directoryIn {
+	background: url(../images/icn_directoryin.png) no-repeat 0px 0px;
+}
+
+#header #directoryOptions #directories {
+	width: 250px;
+	height: 28px;
+	line-height: 28px;
+	background: #eee;
+	border-color: #777;
+	font-size: 11px;
+}
+
+#header #directoryOptions .container {
+	display: block;
+	width: 250px;
+	height: auto;
+	margin: 1px 0 0 10px;
+	float: left;
+	clear: none;
+	white-space: nowrap;
 }
 
 /*
@@ -496,6 +608,7 @@ a:active {
 	padding: 3px 15px 3px 35px;
 	margin: 0;
 	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
 	white-space: nowrap;
 	text-shadow: 0 1px 0 #fff;
 }
@@ -506,12 +619,15 @@ a:active {
 }
 
 #sidebar ul li.hovering {
+	background-color: #d5eb7b !important;
 	border: 0;
 }
 
 #sidebar ul li.selected {
+	background-color: #b4d727 !important;
 	border: 0;
 	font-weight: bold;
+	text-shadow: 0 1px 0 #d5eb7b;
 }
 
 /*
@@ -529,6 +645,7 @@ a:active {
 	height: 170px;
 	margin: 10px 5px;
 	padding: 0;
+	font-size: 11px;
 	float: left;
 	clear: none;
 }
@@ -547,6 +664,7 @@ a:active {
 	width: 120px;
 	height: 120px;
 	margin: 5px auto 0 auto;
+	border: 1px solid #eee;
 	background: #fff;
 }
 
@@ -561,11 +679,11 @@ a:active {
 	overflow: hidden;
 }
 
-#browser ul li .nameinfo {
-	margin: 5px auto 0 auto;
-}
-
 #browser ul li .name {
+	display: block;
+	width: 100%;
+	height: auto;
+	margin-top: 5px;
 	font-weight: bold;
 	text-align: center;
 }
@@ -591,9 +709,13 @@ a:active {
 }
 
 #browser ul li.hovering .diritem {
+	background: #fcfff1;
+	border: 2px solid #e4f3aa;
 }
 
 #browser ul li.selected .diritem {
+	background: #f9ffe3;
+	border: 2px solid #b4d727;
 }
 
 #browser ul li a {
@@ -684,6 +806,7 @@ a:active {
 }
 
 #CJModalDialog .innerBox .margins .label {
+	font-size: 10px;
 	color: #444;
 }
 
@@ -703,6 +826,7 @@ a:active {
 }
 
 #CJModalDialog .innerBox .margins .content {
+	font-size: 12px;
 	margin: 10px 5px 10px 0;
 	padding: 0;
 	text-align: left;
@@ -718,7 +842,7 @@ a:active {
 	text-align: right;
 }
 
-#CJModalDialog .innerBox .margins .buttons button {
+#CJModalDialog .innerBox .margins .buttons buttons {
 	margin-right: 0;
 }
 
@@ -795,35 +919,7 @@ a:active {
 }
 
 
-/* Form Elements - Taken from Filament Group */
-.cj-margins { padding: 5px }
-.cj-state-default { border: 1px solid #fff; background: transparent; }
 
-/*
-.cj-button { outline: 0; margin:0 4px 0 0; padding: .4em 1em; text-decoration:none !important; cursor:pointer; position: relative; text-align: center; zoom: 1; }
-.cj-button .ui-icon { position: absolute; top: 50%; margin-top: -8px; left: 50%; margin-left: -8px; }
-
-a.cj-button { float:left; }
-*/
-/* remove extra button width in IE
-button.cj-button { width:auto; overflow:visible; } */
-
-/*.cj-button-icon-left { padding-left: 2.1em; }
-.cj-button-icon-right { padding-right: 2.1em; }
-.cj-button-icon-left .ui-icon { right: auto; left: .2em; margin-left: 0; }
-.cj-button-icon-right .ui-icon { left: auto; right: .2em; margin-left: 0; }
-
-.cj-button-icon-solo { display:block; width: 8px; text-indent: -9999px; }*/	 /* solo icon buttons must have block properties for the text-indent to work */
-
-/*.cj-buttonset { float:left; }
-.cj-buttonset .cj-button { float: left; }
-.cj-buttonset-single .cj-button,
-.cj-buttonset-multi .cj-button { margin-right: -1px;}
-
-.cj-toolbar { padding: .5em; margin: 0;  }
-.cj-toolbar .cj-buttonset { margin-right:1.5em; padding-left: 1px; }
-.cj-toolbar .cj-button {   }
- */
 
 
 
