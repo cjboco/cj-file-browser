@@ -421,11 +421,22 @@ a:hover {
 	overflow: hidden;
 }
 
-#sidebar {
+#content {
 	position: fixed;
-	top: 43px;
+	top: 44px;
 	left: 0px;
-	bottom: 25px;
+	bottom: 24px;
+	right: 0px;
+	display: block;
+	width: auto;
+	height: auto;
+}
+
+#sidebar {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	bottom: 1px;
 	display: block;
 	width: 200px;
 	height: auto;
@@ -434,10 +445,10 @@ a:hover {
 }
 
 #browser {
-	position: fixed;
-	top: 43px;
+	position: absolute;
+	top: 0px;
 	left: 200px;
-	bottom: 25px;
+	bottom: 1px;
 	right: 0px;
 	background: #fff;
 	overflow: auto;

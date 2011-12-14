@@ -17,6 +17,8 @@ My Hit List
 
 * Drag and drop file upload should be fully functional.
 
+* Added a drag bar to allow you to resize the sidebar/browser.
+
 Known Issues
 =======================
 * Cookies. I'm storing the last directory accessed in a cookie. I was running into a lot of problem with this with "multiple" cjFileBrowser's and have different base paths. I think I nipped it (finally), but still not 100%. Let me know of issues.

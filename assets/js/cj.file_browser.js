@@ -586,6 +586,7 @@
 							if (typeof sys.dirContents === 'object' && sys.dirContents.length > 0) {
 								sys.basePath = opts.baseRelPath[sys.currentPathIdx];
 								$.cookie('cj_dir', sys.basePath, {
+									domain: '.' + document.domain.replace(/\.?www\./, ''),
 									expires: 1,
 									path: opts.baseRelPath[0]
 								});
@@ -921,7 +922,6 @@
 						sys.dragObjId = $this.attr('id');
 					},
 					stop: function(event, ui) {
-						var $this = $(event.target).parents('li');
 						sys.dragObjId = null;
 					}
 				});
@@ -1652,6 +1652,7 @@
 			if (!sys.basePath) {
 				// if either path is invalid, then make sure the cookie get's removed.
 				$.cookie('cj_dir', null, {
+					domain: '.' + document.domain.replace(/\.?www\./, ''),
 					expires: -1,
 					path: sys.basePath
 				});
@@ -1691,6 +1692,99 @@
 			}
 		}
 
+		// need to make a block to allow adjusting the sidebar and content widths
+		function setUpSideBarSlider() {
+			var $wrap = $('#content'),
+				$slide = $('<div id="slideadjust"></div>'),
+				c = parseInt($.cookie("cj_sidebar"), 10) || $('#sidebar').width(),
+				delta,
+				timer;
+			// we need to set initial positions based on cookie value
+			$('#sidebar').width(c);
+			$('#browser').css({
+				left: c + 'px'
+			});
+			$slide.css({
+				left: c + 'px'
+			});
+			// handle slider
+			$slide.css({
+				position: 'absolute',
+				left: (c - 2) + 'px',
+				top: ($wrap.find('header').height() + $('section h2.pageTitle').height()) + 'px',
+				bottom: $wrap.find('footer').height() + 'px',
+				display: 'block',
+				width: '10px',
+				height: $('#sidebar').height(),
+				borderLeft: '4px solid #74c507',
+				opacity: 0,
+				zIndex: 9999
+			});
+			$wrap.append($slide);
+			$(window).on('mouseover', function(e) {
+				if ($(e.target).is($slide) && !timer) {
+					timer = window.setTimeout(function() {
+						$slide.fadeTo(75, 1);
+						$slide.css('cursor', 'ew-resize');
+					}, 500);
+				} else if (timer) {
+					window.clearTimeout(timer);
+					timer = null;
+				}
+			}).on('mouseout', function(e) {
+				if (!delta && $(e.target).is($slide)) {
+					$slide.css('opacity', 0);
+					$slide.css('cursor', 'default');
+				}
+			}).on('mousedown', function(e) {
+				if ($(e.target).is($slide)) {
+					delta = e.pageX - $('#sidebar').width();
+					return false;
+				} else {
+					$slide.css('opacity', 0);
+				}
+			}).on('mouseup', function(e) {
+				var x = 0;
+				if (delta) {
+					if (e.pageX - delta < 50) {
+						x = 50;
+					} else if (e.pageX - delta > $(window).width() - 50) {
+						x = $(window).width() - 50;
+					} else {
+						x = e.pageX - delta;
+					}
+					$('#sidebar').width(x);
+					$('#browser').css({
+						left: x + 'px'
+					});
+					$(this).css({
+						left: x + 'px'
+					});
+					$.cookie("cj_sidebar", parseInt(x, 10), {
+						domain: '.' + document.domain.replace(/\.?www\./, ''),
+						path: opts.baseRelPath[0]
+					});
+					delta = null;
+					timer = null;
+				}
+			}).on('mousemove', function(e) {
+				var x = 0;
+				if (delta) {
+					if (e.pageX - delta < 50) {
+						x = 50;
+					} else if (e.pageX - delta > $(window).width() - 50) {
+						x = $(window).width() - 50;
+					} else {
+						x = e.pageX - delta;
+					}
+					$slide.css({
+						left: x + 'px'
+					});
+				}
+			});
+		}
+
+
 		function init() {
 
 			if (typeof options === 'object' || (typeof options === 'string' && options === 'init')) {
@@ -1716,8 +1810,10 @@
 							'</div>' +
 						'</form>' +
 					'</div>' +
-					'<div id="sidebar" class="ui-widget-content"></div>' +
-					'<div id="browser" class="ui-widget-content"></div>' +
+					'<div id="content">' +
+						'<div id="sidebar"></div>' +
+						'<div id="browser"></div>' +
+					'</div>' +
 					'<div id="footer"></div>'
 				);
 
@@ -1758,8 +1854,11 @@
 
 				} else {
 
+					setUpSideBarSlider();
+
 					// test to make sure our handler exists
 					getHandler();
+
 				}
 
 			}
