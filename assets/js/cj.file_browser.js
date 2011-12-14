@@ -278,12 +278,15 @@
 		// updates the main browser window's stats
 		function updateDisplayStats(path, cnt, size) {
 			var stats = '';
-			stats += '<div class="margins">';
-			stats += '<div class="item">Path: <strong>' + path + '<\/strong><\/div>';
-			stats += '<div class="item">Size: <strong>' + (typeof size === 'number' ? displayFileSize(parseInt(size, 10)) : 'NaN') + '<\/strong><\/div>';
-			stats += '<div class="item">Files: <strong>' + (typeof cnt === 'number' ? cnt : 'NaN') + '<\/strong><\/div>';
-			stats += '<\/div>';
-			$('#footer .stats').html(stats);
+			$('#footer .stats').html('');
+			if (path) {
+				stats += '<div class="margins">';
+				stats += '<div class="item">Path: <strong>' + path + '<\/strong><\/div>';
+				stats += '<div class="item">Size: <strong>' + (typeof size === 'number' ? displayFileSize(parseInt(size, 10)) : 'NaN') + '<\/strong><\/div>';
+				stats += '<div class="item">Files: <strong>' + (typeof cnt === 'number' ? cnt : 'NaN') + '<\/strong><\/div>';
+				stats += '<\/div>';
+				$('#footer .stats').html(stats);
+			}
 		}
 
 
@@ -589,13 +592,14 @@
 								type: 'progress',
 								state: 'hide'
 							});
-							if (typeof sys.dirContents === 'object' && sys.dirContents.length > 0) {
-								sys.basePath = opts.baseRelPath[sys.currentPathIdx];
-								$.cookie('cj_dir', sys.basePath, {
-									domain: '.' + document.domain.replace(/\.?www\./, ''),
-									expires: 1,
-									path: opts.baseRelPath[0]
-								});
+							// set path and cookie
+							sys.basePath = opts.baseRelPath[sys.currentPathIdx];
+							$.cookie('cj_dir', sys.basePath, {
+								domain: '.' + document.domain.replace(/\.?www\./, ''),
+								expires: 1,
+								path: opts.baseRelPath[0]
+							});
+							if (typeof sys.dirContents === 'object') {
 								if (sys.debug) {
 									console.log($.cookie('cj_dir'));
 								}
