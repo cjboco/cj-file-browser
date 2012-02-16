@@ -488,7 +488,7 @@ a:active {
 	margin: 0;
 	padding: 0;
 	list-style: none;
-	background: #fff url(../images/bg_sidebar.png);
+	background: url(../images/bg_sidebar_rows.png);
 }
 
 #sidebar ul li {
@@ -663,7 +663,7 @@ a:active {
 	width: 350px;
 	height: auto;
 	border: 1px solid #777;
-	z-index: 110;
+	z-index: 9999;
 }
 
 #CJModalDialog .innerBox {

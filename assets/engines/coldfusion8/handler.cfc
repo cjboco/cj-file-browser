@@ -59,7 +59,7 @@
 	<!--- ------------------------------------------------------------------------
 
 		isHandlerReady - Informs CJ File Browser that the handler exists
-						 and also check to make sure the security.xml
+						 and also check to make sure the security file
 						 file is present and appears to be valid.
 
 		Author: Doug Jones
@@ -82,25 +82,25 @@
 					<cfsetting requestTimeout="#arguments.timeOut#" />
 				</cfif>
 
-				<!--- check security.xml version --->
+				<!--- check security file version --->
 				<cfset locvar.version = getSecuritySettings('version') />
 				<cfif isStruct(locvar.version) and isDefined("locvar.version.error") and NOT locvar.version.error>
 					<cfif isDefined("locvar.version.version") and locvar.version.version eq arguments.version>
 						<!--- everything ok --->
 					<cfelse>
 						<cfset result['error'] = true />
-						<cfset ArrayAppend(result['msg'], "Security.xml version does not match the CJ File Browser version.") />
+						<cfset ArrayAppend(result['msg'], "Security file version does not match the CJ File Browser version.") />
 					</cfif>
 				<cfelse>
 					<cfset result['error'] = true />
 					<cfif isDefined("locvar.version.error_msg")>
 						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result['msg'], "Problems checking security.xml version.") />
+						<cfset ArrayAppend(result['msg'], "Problems checking security file version.") />
 					</cfif>
 				</cfif>
 
-				<!--- check security.xml directories (and validate inital path) --->
+				<!--- check security file directories (and validate inital path) --->
 				<cfset locvar.validatePath = getSecuritySettings('directories') />
 				<cfif isStruct(locvar.validatePath) and isDefined("locvar.validatePath.error") and NOT locvar.validatePath.error>
 					<!--- everything checks out, now validate the directory path (if provided) --->
@@ -120,11 +120,11 @@
 					<cfif isDefined("locvar.version.error_msg")>
 						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result['msg'], "Problems checking security.xml authorized directories.") />
+						<cfset ArrayAppend(result['msg'], "Problems checking security file authorized directories.") />
 					</cfif>
 				</cfif>
 
-				<!--- check security.xml actions --->
+				<!--- check security file actions --->
 				<cfset locvar.validateAction = getSecuritySettings('actions') />
 				<cfif isStruct(locvar.validateAction) and isDefined("locvar.validateAction.error") and NOT locvar.validateAction.error>
 					<!--- everything checks out --->
@@ -133,11 +133,11 @@
 					<cfif isDefined("locvar.version.error_msg")>
 						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result['msg'], "Problems checking security.xml authorized actions.") />
+						<cfset ArrayAppend(result['msg'], "Problems checking security file authorized actions.") />
 					</cfif>
 				</cfif>
 
-				<!--- check security.xml file extensions --->
+				<!--- check security file extensions --->
 				<cfset locvar.isFileExtValid = getSecuritySettings('fileExts') />
 				<cfif isStruct(locvar.isFileExtValid) and isDefined("locvar.isFileExtValid.error") and NOT locvar.isFileExtValid.error>
 					<!--- everything checks out --->
@@ -146,7 +146,7 @@
 					<cfif isDefined("locvar.version.error_msg")>
 						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result['msg'], "Problems checking security.xml authorized file extensions.") />
+						<cfset ArrayAppend(result['msg'], "Problems checking security file authorized file extensions.") />
 					</cfif>
 				</cfif>
 
@@ -297,7 +297,7 @@
 
 	<!--- ------------------------------------------------------------------------
 
-		getSecuritySettings	- Reads the cjFileBrowser security.xml file and
+		getSecuritySettings	- Reads the cjFileBrowser security file and
 							  returns no error with a comma seperated list of valid
 							  directories that can be modified or an error
 							  with the error message
@@ -306,7 +306,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="getSecuritySettings" access="public" returntype="any" output="no" hint="Reads the cjFileBrowser security.xml file and returns a comma seperated list of valid  directories that can be modified.">
+	<cffunction name="getSecuritySettings" access="public" returntype="any" output="no" hint="Reads the cjFileBrowser security file and returns a comma seperated list of valid  directories that can be modified.">
 		<cfargument name="settingType" type="string" required="yes" />
 		<cfset var locvar = StructNew() />
 		<cfset var result = StructNew() />
@@ -314,9 +314,22 @@
 		<cfset result['msg'] = "" />
 		<cftry>
 
+			<!--- we need to grab the path to this directory --->
+			<cfset locvar.baseAbsPath = Replace(ExpandPath('.'), "\", "/", "ALL") />
+			<cfif Right(locvar.baseAbsPath, 1) neq "/">
+				<cfset locvar.baseAbsPath = locvar.baseAbsPath & "/" />
+			</cfif>
+
 			<!--- called from assets/engines/ENGINE folder --->
-			<cfif FileExists(ExpandPath('../../../security.xml'))>
-				<cffile action="read" file="#ExpandPath('../../../security.xml')#" variable="locvar.xml">
+			<cfif FileExists("#locvar.baseAbsPath#security.cfm")>
+				<cffile action="read" file="#locvar.baseAbsPath#security.cfm" variable="locvar.xml">
+			<cfelseif FileExists("#locvar.baseAbsPath#security.php")>
+				<cffile action="read" file="#locvar.baseAbsPath#security.php" variable="locvar.xml">
+			<cfelse>
+				<cffile action="read" file="#locvar.baseAbsPath#security.xml" variable="locvar.xml">
+			</cfif>
+
+			<cfif isDefined('locvar.xml') and Len(locvar.xml) gt 0>
 				<cfset locvar.xml = XMLParse(locvar.xml) />
 				<cfif isXml(locvar.xml)>
 
@@ -346,11 +359,11 @@
 								<cfset result['dirListRel'] = locvar.dirListRel />
 							<cfelse>
 								<cfset result['error'] = true />
-								<cfset result['msg'] = "There are no authorized directories set in the security.xml file. (Cannot be blank)" />
+								<cfset result['msg'] = "There are no authorized directories set in the security file. (Cannot be blank)" />
 							</cfif>
 						<cfelse>
 							<cfset result['error'] = true />
-							<cfset result['msg'] = "There are no authorized directories set in the security.xml file. (Cannot be blank)" />
+							<cfset result['msg'] = "There are no authorized directories set in the security file. (Cannot be blank)" />
 						</cfif>
 
 					<!--- security actions --->
@@ -370,11 +383,11 @@
 								<cfset result['actionList'] = locvar.actionList />
 							<cfelse>
 								<cfset result['error'] = true />
-								<cfset result['msg'] = "There are no authorized actions set in the security.xml file. (No settings will not allow any action)" />
+								<cfset result['msg'] = "There are no authorized actions set in the security file. (No settings will not allow any action)" />
 							</cfif>
 						<cfelse>
 							<cfset result['error'] = true />
-							<cfset result['msg'] = "There are no authorized actions set in the security.xml file. (No settings will not allow any action)" />
+							<cfset result['msg'] = "There are no authorized actions set in the security file. (No settings will not allow any action)" />
 						</cfif>
 
 
@@ -396,11 +409,11 @@
 								<cfset result['extList'] = locvar.extList />
 							<cfelse>
 								<cfset result['error'] = true />
-								<cfset result['msg'] = "There are no authorized file extensions set in the security.xml file. (Cannot be blank)" />
+								<cfset result['msg'] = "There are no authorized file extensions set in the security file. (Cannot be blank)" />
 							</cfif>
 						<cfelse>
 							<cfset result['error'] = true />
-							<cfset result['msg'] = "There are no authorized file extensions set in the security.xml file. (Cannot be blank)" />
+							<cfset result['msg'] = "There are no authorized file extensions set in the security file. (Cannot be blank)" />
 						</cfif>
 
 					<!--- security file extensions --->
@@ -428,7 +441,7 @@
 			<cfelse>
 
 				<cfset result['error'] = true />
-				<cfset result['msg'] = "Security.xml file could not be found." />
+				<cfset result['msg'] = "Security file could not be found." />
 
 			</cfif>
 			<cfcatch type="any">
@@ -504,36 +517,34 @@
 								<cfset locvar.fileExts = ReReplace(URLDecode(arguments.fileExts), "[\s]*,[\s]*",",","ALL") />
 								<cfif locvar.fileExts eq "*" or locvar.qry.type eq "Dir" or (locvar.fileExts neq "*" and ListFindNoCase(locvar.fileExts, locvar.ext) gt 0)>
 									<cfif isFileExtValid(locvar.ext,locvar.authExts) or (locvar.qry.type eq "Dir" and isActionValid('navigateDirectory',locvar.authActions))>
-										<cfif ArrayLen(locvar.dir) lt locvar.idx>
-											<cfset ArrayAppend(locvar.dir, StructNew())>
-										</cfif>
-										<cfset locvar.dir[locvar.idx].name = HTMLEditFormat(locvar.qry.name) />
-										<cfset locvar.dir[locvar.idx].size = locvar.qry.size />
-										<cfset locvar.dir[locvar.idx].type = UCase(locvar.qry.type) />
-										<cfif isDate(locvar.qry.datelastmodified)>
-											<cfset locvar.dir[locvar.idx].datelastmodified = DateFormat(locvar.qry.datelastmodified,"mmmm d, yyyy") & " " & TimeFormat(locvar.qry.datelastmodified,"hh:mm:ss") />
+										<cfset locvar.temp = StructNew() />
+										<cfset locvar.temp['name'] = HTMLEditFormat(locvar.qry.name) />
+										<cfset locvar.temp['size'] = locvar.qry.size />
+										<cfset locvar.temp['type'] = UCase(locvar.qry.type) />
+										<cfif isDate(locvar.qry.dateLastModified)>
+											<cfset locvar.temp['date'] = DateFormat(locvar.qry.dateLastModified,"mmmm d, yyyy") & " " & TimeFormat(locvar.qry.dateLastModified,"hh:mm:ss") />
 										<cfelse>
-											<cfset locvar.dir[locvar.idx].datelastmodified = "" />
+											<cfset locvar.temp['date'] = "" />
 										</cfif>
-										<cfset locvar.dir[locvar.idx].attributes = locvar.qry.attributes />
-										<cfset locvar.dir[locvar.idx].directory = locvar.baseRelPath />
-										<cfset locvar.dir[locvar.idx].extension = UCase(locvar.ext) />
+										<cfset locvar.temp['attr'] = locvar.qry.attributes />
+										<cfset locvar.temp['dir'] = locvar.baseRelPath />
+										<cfset locvar.temp['ext'] = UCase(locvar.ext) />
 										<cfif locvar.qry.type eq "file">
-											<cfset locvar.dir[locvar.idx].mime = getPageContext().getServletContext().getMimeType(locvar.qry.name) />
+											<cfset locvar.temp['mime'] = getPageContext().getServletContext().getMimeType(locvar.qry.name) />
 										<cfelse>
-											<cfset locvar.dir[locvar.idx].mime = "" />
+											<cfset locvar.temp['mime'] = "" />
 										</cfif>
-										<cfset locvar.dir[locvar.idx].fullpath = locvar.absBaseUrl & locvar.qry.name />
+										<cfset locvar.temp['fullpath'] = locvar.absBaseUrl & locvar.qry.name />
 										<!--- is this an image file? we can pass dimensions if it is --->
 										<cfif ListFindNoCase(variables.webImgFileList, locvar.ext) gt 0>
-											<cfimage action="read" name="locvar.img_input" source="#locvar.dir[locvar.idx].fullpath#" />
-											<cfset locvar.dir[locvar.idx].width = locvar.img_input["width"] />
-											<cfset locvar.dir[locvar.idx].height = locvar.img_input["height"] />
+											<cfimage action="read" name="locvar.img_input" source="#locvar.temp['fullpath']#" />
+											<cfset locvar.temp['width'] = locvar.img_input["width"] />
+											<cfset locvar.temp['height'] = locvar.img_input["height"] />
 										<cfelse>
-											<cfset locvar.dir[locvar.idx].width = "" />
-											<cfset locvar.dir[locvar.idx].height = "" />
+											<cfset locvar.temp['width'] = "" />
+											<cfset locvar.temp['height'] = "" />
 										</cfif>
-										<cfset locvar.idx = locvar.idx + 1 />
+										<cfset ArrayAppend(locvar.dir, locvar.temp) />
 									</cfif>
 								</cfif>
 							</cfif>
