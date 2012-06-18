@@ -1203,7 +1203,6 @@
 			// create a modal box background (make sure click throughs don't happen)
 			$('body').append('<div id="CJModalBGround"></div>').on('click', function (e) {
 				e.stopImmediatePropagation();
-				return false;
 			});
 
 			// start our progress bar and do init stuff
