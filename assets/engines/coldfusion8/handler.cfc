@@ -58,6 +58,25 @@
 
 	<!--- ------------------------------------------------------------------------
 
+		getPathToDirectory - A quick and dirty way to get the path
+							to the cjFileBrowser folder. This path
+							can be different depending if it's accessed
+							via AJAX or directly.
+
+		Author: Doug Jones
+		http://www.cjboco.com/
+
+	------------------------------------------------------------------------ --->
+	<cffunction name="getPathToDirectory" access="private" returntype="string" output="no">
+		<cfset var result = StructNew() />
+		<cfset locvar.exp2 = GetDirectoryFromPath(GetCurrentTemplatePath()) />
+		<cfset locvar.exp2 = Replace(locvar.exp2, "\", "/", "ALL") />
+		<cfreturn ReplaceNoCase(locvar.exp2, "assets/engines/coldfusion8/", "", "ALL") />
+	</cffunction>
+
+
+	<!--- ------------------------------------------------------------------------
+
 		isHandlerReady - Informs CJ File Browser that the handler exists
 						 and also check to make sure the security file
 						 file is present and appears to be valid.
@@ -75,6 +94,7 @@
 		<cfset result['error'] = false />
 		<cfset result['msg'] = ArrayNew(1) />
 		<cftry>
+
 			<cfif Len(arguments.version) gt 0>
 
 				<!--- check to see if they passed a timout value --->
@@ -89,14 +109,14 @@
 						<!--- everything ok --->
 					<cfelse>
 						<cfset result['error'] = true />
-						<cfset ArrayAppend(result['msg'], "Security file version does not match the CJ File Browser version.") />
+						<cfset ArrayAppend(result.msg, "Security file version does not match the CJ File Browser version.") />
 					</cfif>
 				<cfelse>
 					<cfset result['error'] = true />
 					<cfif isDefined("locvar.version.error_msg")>
-						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
+						<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result['msg'], "Problems checking security file version.") />
+						<cfset ArrayAppend(result.msg, "Problems checking security file version. (#locvar.version.msg#)") />
 					</cfif>
 				</cfif>
 
@@ -109,18 +129,18 @@
 						<cfif NOT locvar.path>
 							<cfset result['error'] = true />
 							<cfif isDefined("locvar.version.error_msg")>
-								<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
+								<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
 							<cfelse>
-								<cfset ArrayAppend(result['msg'], "Invalid path (#URLDecode(arguments.dirPath)#).") />
+								<cfset ArrayAppend(result.msg, "Invalid path (#URLDecode(arguments.dirPath)#).") />
 							</cfif>
 						</cfif>
 					</cfif>
 				<cfelse>
 					<cfset result['error'] = true />
 					<cfif isDefined("locvar.version.error_msg")>
-						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
+						<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result['msg'], "Problems checking security file authorized directories.") />
+						<cfset ArrayAppend(result.msg, "Problems checking security file authorized directories.") />
 					</cfif>
 				</cfif>
 
@@ -131,9 +151,9 @@
 				<cfelse>
 					<cfset result['error'] = true />
 					<cfif isDefined("locvar.version.error_msg")>
-						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
+						<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result['msg'], "Problems checking security file authorized actions.") />
+						<cfset ArrayAppend(result.msg, "Problems checking security file authorized actions.") />
 					</cfif>
 				</cfif>
 
@@ -144,9 +164,9 @@
 				<cfelse>
 					<cfset result['error'] = true />
 					<cfif isDefined("locvar.version.error_msg")>
-						<cfset ArrayAppend(result['msg'], locvar.version.error_msg) />
+						<cfset ArrayAppend(result.msg, locvar.version.error_msg) />
 					<cfelse>
-						<cfset ArrayAppend(result['msg'], "Problems checking security file authorized file extensions.") />
+						<cfset ArrayAppend(result.msg, "Problems checking security file authorized file extensions.") />
 					</cfif>
 				</cfif>
 
@@ -154,12 +174,12 @@
 			<cfelse>
 
 				<cfset result['error'] = true />
-				<cfset ArrayAppend(result['msg'], "Version information not provided.") />
+				<cfset ArrayAppend(result.msg, "Version information not provided.") />
 
 			</cfif>
 			<cfcatch type="any">
 				<cfset result['error'] = true />
-				<cfset ArrayAppend(result['msg'], cfcatch.message) />
+				<cfset ArrayAppend(result.msg, cfcatch.message) />
 			</cfcatch>
 		</cftry>
 		<cfreturn result />
@@ -175,13 +195,13 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="isPathValid" access="public" returntype="boolean" output="no" hint="Validates that the given relative path is allowed within the security settings.">
+	<cffunction name="isPathValid" access="remote" returntype="boolean" output="no" hint="Validates that the given relative path is allowed within the security settings.">
 		<cfargument name="baseRelPath" type="string" required="yes" />
 		<cfargument name="exact" type="boolean" required="no" default="false" />
 		<cfargument name="settings" type="any" required="no" default="" />
 		<cfset var locvar = StructNew() />
 		<cftry>
-			<cfset locvar.baseRelPath = URLDecode(arguments.baseRelPath) />
+			<cfset locvar['baseRelPath'] = URLDecode(arguments.baseRelPath) />
 			<cfif Len(locvar.baseRelPath) gt 0>
 				<!--- to save time on disk reads, we can pass the directory list --->
 				<cfif isStruct(arguments.settings) and isDefined("arguments.settings.error") and NOT arguments.settings.error and isDefined("arguments.settings.dirListRel") and ListLen(arguments.settings.dirListRel) gt 0>
@@ -224,7 +244,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="isActionValid" access="public" returntype="boolean" output="no" hint="Validates that the given action is allowed within the security settings.">
+	<cffunction name="isActionValid" access="remote" returntype="boolean" output="no" hint="Validates that the given action is allowed within the security settings.">
 		<cfargument name="userAction" type="string" required="yes" />
 		<cfargument name="settings" type="any" required="no" default="" />
 		<cfset var locvar = StructNew() />
@@ -263,7 +283,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="isFileExtValid" access="public" returntype="boolean" output="no" hint="Validates that the given file extension is allowed within the security settings.">
+	<cffunction name="isFileExtValid" access="remote" returntype="boolean" output="no" hint="Validates that the given file extension is allowed within the security settings.">
 		<cfargument name="fileExt" type="string" required="yes" />
 		<cfargument name="settings" type="any" required="no" default="" />
 		<cfset var locvar = StructNew() />
@@ -306,7 +326,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="getSecuritySettings" access="public" returntype="any" output="no" hint="Reads the cjFileBrowser security file and returns a comma seperated list of valid  directories that can be modified.">
+	<cffunction name="getSecuritySettings" access="remote" returntype="any" output="no" hint="Reads the cjFileBrowser security file and returns a comma seperated list of valid  directories that can be modified.">
 		<cfargument name="settingType" type="string" required="yes" />
 		<cfset var locvar = StructNew() />
 		<cfset var result = StructNew() />
@@ -315,7 +335,7 @@
 		<cftry>
 
 			<!--- we need to grab the path to this directory --->
-			<cfset locvar.baseAbsPath = Replace(ExpandPath('.'), "\", "/", "ALL") />
+			<cfset locvar.baseAbsPath = getPathToDirectory() />
 			<cfif Right(locvar.baseAbsPath, 1) neq "/">
 				<cfset locvar.baseAbsPath = locvar.baseAbsPath & "/" />
 			</cfif>
@@ -470,7 +490,7 @@
 		<cfset var result = StructNew() />
 		<cftry>
 
-			<cfset locvar.baseRelPath = URLDecode(arguments.baseRelPath) />
+			<cfset locvar['baseRelPath'] = URLDecode(arguments.baseRelPath) />
 
 			<!--- check to see if they passed a timout value --->
 			<cfif isDefined("arguments.timeOut") and isNumeric(arguments.timeOut) and arguments.timeOut gt 0>
@@ -478,12 +498,12 @@
 			</cfif>
 
 			<!--- preload our security settings (since we have to read this in each time) --->
-			<cfset locvar.authDirs = getSecuritySettings('directories') />
-			<cfset locvar.authActions = getSecuritySettings('actions') />
-			<cfset locvar.authExts = getSecuritySettings('fileExts') />
+			<cfset locvar['authDirs'] = getSecuritySettings('directories') />
+			<cfset locvar['authActions'] = getSecuritySettings('actions') />
+			<cfset locvar['authExts'] = getSecuritySettings('fileExts') />
 
 			<!--- validate "navigateDirectory" action and path --->
-			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
+			<cfif NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
 				<cfset result['error'] = true />
 				<cfset result['msg'] = "Directory access denied." />
@@ -498,23 +518,23 @@
 
 				<cfset result['error'] = false />
 				<cfset result['msg'] = "" />
-				<cfset locvar.absBaseUrl = ExpandPath(locvar.baseRelPath) />
-				<cfset locvar.dir = ArrayNew(1) />
+				<cfset locvar['absBaseUrl'] = ExpandPath(locvar.baseRelPath) />
+				<cfset locvar['dir'] = ArrayNew(1) />
 
 				<!--- read the directory and return contents--->
 				<cfif DirectoryExists(locvar.absBaseUrl)>
 					<cfdirectory action="list" directory="#locvar.absBaseUrl#" name="locvar.qry" sort="name" />
 					<cfif locvar.qry.recordCount gt 0>
-						<cfset locvar.idx = 1 />
+						<cfset locvar['idx'] = 1 />
 						<cfloop query="locvar.qry">
 							<cfif (arguments.showInv or (NOT arguments.showInv and Left(locvar.qry.name,1) neq "."))>
 								<cfif locvar.qry.type eq "file" and Find(".",locvar.qry.name) gt 1>
-									<cfset locvar.ext = LCase(ListLast(locvar.qry.name,'.')) />
+									<cfset locvar['ext'] = LCase(ListLast(locvar.qry.name,'.')) />
 								<cfelse>
-									<cfset locvar.ext = "" />
+									<cfset locvar['ext'] = "" />
 								</cfif>
 								<!--- remove any spaced between the list items ", " or " ," --->
-								<cfset locvar.fileExts = ReReplace(URLDecode(arguments.fileExts), "[\s]*,[\s]*",",","ALL") />
+								<cfset locvar['fileExts'] = ReReplace(URLDecode(arguments.fileExts), "[\s]*,[\s]*",",","ALL") />
 								<cfif locvar.fileExts eq "*" or locvar.qry.type eq "Dir" or (locvar.fileExts neq "*" and ListFindNoCase(locvar.fileExts, locvar.ext) gt 0)>
 									<cfif isFileExtValid(locvar.ext,locvar.authExts) or (locvar.qry.type eq "Dir" and isActionValid('navigateDirectory',locvar.authActions))>
 										<cfset locvar.temp = StructNew() />
@@ -531,6 +551,9 @@
 										<cfset locvar.temp['ext'] = UCase(locvar.ext) />
 										<cfif locvar.qry.type eq "file">
 											<cfset locvar.temp['mime'] = getPageContext().getServletContext().getMimeType(locvar.qry.name) />
+											<cfif NOT StructKeyExists(locvar.temp, "mime") or NOT isSimpleValue(locvar.temp.mime)>
+												<cfset locvar.temp['mime'] = "" />
+											</cfif>
 										<cfelse>
 											<cfset locvar.temp['mime'] = "" />
 										</cfif>
@@ -587,7 +610,7 @@
 		<cfset var result = StructNew() />
 		<cftry>
 
-			<cfset locvar.baseRelPath = URLDecode(arguments.baseRelPath) />
+			<cfset locvar['baseRelPath'] = URLDecode(arguments.baseRelPath) />
 
 			<!--- check to see if they passed a timout value --->
 			<cfif isDefined("arguments.timeOut") and isNumeric(arguments.timeOut) and arguments.timeOut gt 0>
@@ -599,7 +622,7 @@
 			<cfset locvar.authActions = getSecuritySettings('actions') />
 
 			<!--- validate "navigateDirectory" action and path --->
-			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
+			<cfif NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
 				<cfset result['error'] = true />
 				<cfset result['msg'] = "Directory access denied." />
@@ -706,7 +729,7 @@
 				<cfset locvar.fileSize = GetFileInfo(GetTempDirectory() & GetFileFromPath(arguments.fileUploadField)) />
 
 				<!--- validate "navigateDirectory" action and path --->
-				<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseUrl,true,locvar.authDirs)) or NOT isPathValid(locvar.baseUrl,false,locvar.authDirs)>
+				<cfif NOT isPathValid(locvar.baseUrl,false,locvar.authDirs)>
 
 					<cfset result['error'] = true />
 					<cfset result['msg'] = "Directory access denied." />
@@ -726,41 +749,41 @@
 				<cfelseif isDefined("locvar.fileSize.size") and locvar.fileSize.size gt (arguments.maxSize * 1024)>
 
 					<cfset result['error'] = true />
-					<cfset ArrayAppend(result['msg'], "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(arguments.maxSize,'9,999')#KB.")>
+					<cfset ArrayAppend(result.msg, "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(arguments.maxSize,'9,999')#KB.")>
 
 				<cfelse>
 
 					<!--- validate that we have the proper form fields --->
 					<cfif NOT DirectoryExists(ExpandPath(locvar.baseUrl))>
 						<cfset result['error'] = true />
-						<cfset ArrayAppend(result['msg'], "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
+						<cfset ArrayAppend(result.msg, "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
 					</cfif>
 					<cfif NOT isDefined("arguments.baseUrl") or (isDefined("arguments.baseUrl") and (Len(arguments.baseUrl) eq 0 or ReFind("[^a-zA-Z0-9\,\$\-\_\.\+\!\*\'\(\)\/]+",locvar.baseUrl) gt 0))>
 						<cfset result['error'] = true />
-						<cfset ArrayAppend(result['msg'], "Variable BASEURL not defined or invalid data.") />
+						<cfset ArrayAppend(result.msg, "Variable BASEURL not defined or invalid data.") />
 					</cfif>
 					<cfif NOT isDefined("locvar.fileExts") or (isDefined("locvar.fileExts") and locvar.fileExts neq "*" and ReFind("[^a-zA-Z0-9\,]+", locvar.fileExts) gt 0)>
 						<cfset result['error'] = true />
-						<cfset ArrayAppend(result['msg'], "Variable FILEEXTS not defined or invalid data.") />
+						<cfset ArrayAppend(result.msg, "Variable FILEEXTS not defined or invalid data.") />
 					<cfelse>
 						<!--- remove any spaced between the list items ", " or " ," --->
 						<cfset locvar.fileExts = ReReplace(locvar.fileExts, "[\s]*,[\s]*",",","ALL") />
 					</cfif>
 					<cfif NOT isNumeric(arguments.maxSize) or (isNumeric(arguments.maxSize) and (arguments.maxSize lt 1 or arguments.maxSize gt 9999999))>
 						<cfset result['error'] = true />
-						<cfset ArrayAppend(result['msg'], "Variable MAXSIZE not defined or invalid data.") />
+						<cfset ArrayAppend(result.msg, "Variable MAXSIZE not defined or invalid data.") />
 					</cfif>
 					<cfif NOT isNumeric(arguments.maxWidth) or (isNumeric(arguments.maxWidth) and (arguments.maxWidth lt 1 or arguments.maxSize gt 9999999))>
 						<cfset result['error'] = true />
-						<cfset ArrayAppend(result['msg'], "Variable MAXWIDTH not defined or invalid data.") />
+						<cfset ArrayAppend(result.msg, "Variable MAXWIDTH not defined or invalid data.") />
 					</cfif>
 					<cfif NOT isNumeric(arguments.maxHeight) or (isNumeric(arguments.maxHeight) and (arguments.maxHeight lt 1 or arguments.maxHeight gt 9999999))>
 						<cfset result['error'] = true />
-						<cfset ArrayAppend(result['msg'], "Variable MAXHEIGHT not defined or invalid data.") />
+						<cfset ArrayAppend(result.msg, "Variable MAXHEIGHT not defined or invalid data.") />
 					</cfif>
 					<cfif NOT isDefined("arguments.fileUploadField") or (isDefined("arguments.fileUploadField") and Len(URLDecode(arguments.fileUploadField)) eq 0)>
 						<cfset result['error'] = true />
-						<cfset ArrayAppend(result['msg'], "FILE INPUT FILED not defined or invalid data.") />
+						<cfset ArrayAppend(result.msg, "FILE INPUT FILED not defined or invalid data.") />
 					</cfif>
 
 					<cfif NOT result['error'] and ArrayLen(result['msg']) eq 0>
@@ -826,7 +849,7 @@
 							<cfelse>
 
 								<cfset result['error'] = true />
-								<cfset ArrayAppend(result['msg'], "You are not allowed to upload #UCase(cffile.serverFileExt)# files.") />
+								<cfset ArrayAppend(result.msg, "You are not allowed to upload #UCase(cffile.serverFileExt)# files.") />
 
 								<!--- delete the file --->
 								<cffile action="delete" file="#ExpandPath('#locvar.baseUrl##cffile.ServerFile#')#" />
@@ -839,11 +862,11 @@
 								<cffile action="delete" file="#ExpandPath('#locvar.baseUrl##cffile.ServerFile#')#" />
 							</cfif>
 							<cfset result['error'] = true />
-							<cfset ArrayAppend(result['msg'], "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(arguments.maxSize,'9,999')#KB.")>
+							<cfset ArrayAppend(result.msg, "The file size of your upload excedes the allowable limit. Please upload a file smaller than #NumberFormat(arguments.maxSize,'9,999')#KB.")>
 						<cfelse>
 							<!--- cffile.filewassaved = "no" --->
 							<cfset result['error'] = true />
-							<cfset ArrayAppend(result['msg'], "Problems encountered uploading the file.")>
+							<cfset ArrayAppend(result.msg, "Problems encountered uploading the file.")>
 						</cfif>
 
 					<cfelse>
@@ -948,7 +971,7 @@
 						<cfset locvar.authExts = getSecuritySettings('fileExts') />
 
 						<!--- validate "navigateDirectory" action and path --->
-						<cfif (NOT isActionValid("navigateDirectory", locvar.authActions) and NOT isPathValid(cj.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(cj.baseRelPath, false, locvar.authDirs)>
+						<cfif NOT isPathValid(cj.baseRelPath, false, locvar.authDirs)>
 
 							<cfset result['error'] = true />
 							<cfset result['msg'] = "Directory access denied." />
@@ -977,30 +1000,30 @@
 							<!--- validate that we have the proper form fields --->
 							<cfif NOT DirectoryExists(ExpandPath(cj.baseRelPath))>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result['msg'], "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
+								<cfset ArrayAppend(result.msg, "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
 							</cfif>
 							<cfif Len(cj.baseRelPath) eq 0 or ReFind("[^a-zA-Z0-9\,\$\-\_\.\+\!\*\'\(\)\/]+", cj.baseRelPath) gt 0>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result['msg'], "Variable BASEURL not defined or invalid data.") />
+								<cfset ArrayAppend(result.msg, "Variable BASEURL not defined or invalid data.") />
 							</cfif>
 							<cfif cj.params.fileExts neq "*" and ReFind("[^a-zA-Z0-9\,]+", URLDecode(cj.params.fileExts)) gt 0>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result['msg'], "Variable FILEEXTS not defined or invalid data.") />
+								<cfset ArrayAppend(result.msg, "Variable FILEEXTS not defined or invalid data.") />
 							<cfelse>
 								<!--- remove any spaced between the list items ", " or " ," --->
 								<cfset cj.params.fileExts = ReReplace(URLDecode(cj.params.fileExts), "[\s]*,[\s]*",",","ALL") />
 							</cfif>
 							<cfif NOT isNumeric(cj.params.maxSize) or (isNumeric(cj.params.maxSize) and (cj.params.maxSize lt 1 or cj.params.maxSize gt 9999999))>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result['msg'], "Variable MAXSIZE not defined or invalid data.") />
+								<cfset ArrayAppend(result.msg, "Variable MAXSIZE not defined or invalid data.") />
 							</cfif>
 							<cfif NOT isNumeric(cj.params.maxWidth) or (isNumeric(cj.params.maxWidth) and (cj.params.maxWidth lt 1 or cj.params.maxSize gt 9999999))>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result['msg'], "Variable MAXWIDTH not defined or invalid data.") />
+								<cfset ArrayAppend(result.msg, "Variable MAXWIDTH not defined or invalid data.") />
 							</cfif>
 							<cfif NOT isNumeric(cj.params.maxHeight) or (isNumeric(cj.params.maxHeight) and (cj.params.maxHeight lt 1 or cj.params.maxHeight gt 9999999))>
 								<cfset result.error = true />
-								<cfset ArrayAppend(result['msg'], "Variable MAXHEIGHT not defined or invalid data.") />
+								<cfset ArrayAppend(result.msg, "Variable MAXHEIGHT not defined or invalid data.") />
 							</cfif>
 
 							<cfif NOT result['error'] and ArrayLen(result['msg']) eq 0>
@@ -1084,7 +1107,7 @@
 		<cfset var result = StructNew() />
 		<cftry>
 
-			<cfset locvar.baseRelPath = URLDecode(arguments.baseRelPath) />
+			<cfset locvar['baseRelPath'] = URLDecode(arguments.baseRelPath) />
 
 			<!--- check to see if they passed a timout value --->
 			<cfif isDefined("arguments.timeOut") and isNumeric(arguments.timeOut) and arguments.timeOut gt 0>
@@ -1096,7 +1119,7 @@
 			<cfset locvar.authActions = getSecuritySettings('actions') />
 
 			<!--- validate "navigateDirectory" action and path --->
-			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
+			<cfif NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
 				<cfset result['error'] = true />
 				<cfset result['msg'] = "Directory access denied." />
@@ -1149,7 +1172,7 @@
 		<cfset var result = StructNew() />
 		<cftry>
 
-			<cfset locvar.baseRelPath = URLDecode(arguments.baseRelPath) />
+			<cfset locvar['baseRelPath'] = URLDecode(arguments.baseRelPath) />
 
 			<!--- check to see if they passed a timout value --->
 			<cfif isDefined("arguments.timeOut") and isNumeric(arguments.timeOut) and arguments.timeOut gt 0>
@@ -1161,7 +1184,7 @@
 			<cfset locvar.authActions = getSecuritySettings('actions') />
 
 			<!--- validate "navigateDirectory" action and path --->
-			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
+			<cfif NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
 				<cfset result['error'] = true />
 				<cfset result['msg'] = "Directory access denied." />
@@ -1220,7 +1243,7 @@
 		<cfset var result = StructNew() />
 		<cftry>
 
-			<cfset locvar.baseRelPath = URLDecode(arguments.baseRelPath) />
+			<cfset locvar['baseRelPath'] = URLDecode(arguments.baseRelPath) />
 
 			<!--- check to see if they passed a timout value --->
 			<cfif isDefined("arguments.timeOut") and isNumeric(arguments.timeOut) and arguments.timeOut gt 0>
@@ -1232,7 +1255,7 @@
 			<cfset locvar.authActions = getSecuritySettings('actions') />
 
 			<!--- validate "navigateDirectory" action and path --->
-			<cfif (NOT isActionValid("navigateDirectory",locvar.authActions) and NOT isPathValid(locvar.baseRelPath, true, locvar.authDirs)) or NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
+			<cfif NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
 
 				<cfset result['error'] = true />
 				<cfset result['msg'] = "Directory access denied." />
@@ -1320,7 +1343,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="calcScaleInfo" access="public" returntype="struct" output="false" hint="A simple function that will return the width, height and offset of scaled image thumbnail.">
+	<cffunction name="calcScaleInfo" access="remote" returntype="struct" output="false" hint="A simple function that will return the width, height and offset of scaled image thumbnail.">
 		<cfargument name="srcWidth" type="numeric" required="yes" hint="The width of the source image." />
 		<cfargument name="srcHeight" type="numeric" required="yes" hint="The height of the source image." />
 		<cfargument name="destWidth" type="numeric" required="yes" hint="The width of the destination image." />
@@ -1377,7 +1400,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="safeFileName" access="public" returntype="string" output="no" hint="Searches a string for illegal filename characters, strips them and then returns the modified string.">
+	<cffunction name="safeFileName" access="remote" returntype="string" output="no" hint="Searches a string for illegal filename characters, strips them and then returns the modified string.">
 		<cfargument name="input" type="string" required="yes" />
 		<cfset var output = arguments.input />
 		<cfif Len(input) eq 0>
@@ -1397,7 +1420,7 @@
 		@return Return a boolean false = no-errors; true = error (DSJ 2010)
 		@version 1, July 28, 2005
 	----------------------------------------------------------------------------------- --->
-	<cffunction name="deleteDirectory" access="public" returntype="any" output="false">
+	<cffunction name="deleteDirectory" access="remote" returntype="any" output="false">
 		<cfargument name="directory" type="string" required="yes" />
 		<cfargument name="recurse" type="boolean" required="no" default="false" />
 		<cfset var myDirectory = "" />

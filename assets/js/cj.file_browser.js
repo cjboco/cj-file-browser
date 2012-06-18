@@ -1,4 +1,4 @@
-﻿/*globals jQuery,dateFormat,tinyMCE,tinyMCEPopup */
+﻿/*globals window,document,jQuery,dateFormat,tinyMCE,tinyMCEPopup,XMLHttpRequest */
 /* ***********************************************************************************
 
 	CJ File Browser Javascript Engine
@@ -110,7 +110,7 @@
 			},
 
 			sys = {
-				version: '4.0.0',
+				version: '4.0.1',
 				timer: null,
 				autoCenter: null,
 				currentPathIdx: 0,
@@ -153,14 +153,14 @@
 
 			function imgLoaded(event) {
 				if (--len <= 0 && event.target.src !== blank) {
-					setTimeout(triggerCallback);
-					$images.unbind('load error', imgLoaded);
+					window.setTimeout(triggerCallback);
+					$images.off('load error', imgLoaded);
 				}
 			}
 			if (!len) {
 				triggerCallback();
 			}
-			$images.bind('load error', imgLoaded).each(function () {
+			$images.on('load error', imgLoaded).each(function () {
 				// cached images don't fire load sometimes, so we reset src.
 				if (this.complete || typeof this.complete === "undefined") {
 					var src = this.src;
@@ -280,10 +280,10 @@
 			$('#footer .stats').html('');
 			if (path) {
 				stats += '<div class="margins">';
-				stats += '<div class="item">Path: <strong>' + path + '<\/strong><\/div>';
-				stats += '<div class="item">Size: <strong>' + (typeof size === 'number' ? displayFileSize(parseInt(size, 10)) : 'NaN') + '<\/strong><\/div>';
-				stats += '<div class="item">Files: <strong>' + (typeof cnt === 'number' ? cnt : 'NaN') + '<\/strong><\/div>';
-				stats += '<\/div>';
+				stats += '<div class="item">Path: <strong>' + path + '</strong></div>';
+				stats += '<div class="item">Size: <strong>' + (typeof size === 'number' ? displayFileSize(parseInt(size, 10)) : 'NaN') + '</strong></div>';
+				stats += '<div class="item">Files: <strong>' + (typeof cnt === 'number' ? cnt : 'NaN') + '</strong></div>';
+				stats += '</div>';
 				$('#footer .stats').html(stats);
 			}
 		}
@@ -308,7 +308,7 @@
 		function displayDialog(opts) {
 			return $.Deferred(function(dfd) {
 				if (typeof opts === 'object' && typeof opts.type === 'string' && typeof opts.state === 'string') {
-					if (typeof $('#CJModalDialog').get(0) !== 'undefined') {
+					if ($('#CJModalDialog').length > 0) {
 						if (sys.autoCenter !== null) {
 							// clear any autocenter intervals
 							window.clearInterval(sys.autoCenter);
@@ -322,11 +322,11 @@
 							'<div id="CJModalDialog">' +
 								'<div class="innerBox">' +
 									'<div class="margins">' +
-										'<div class="label"><\/div>' +
-										'<div class="indicator" style="background-position: 0px 0px"><\/div>' +
-									'<\/div>' +
-								'<\/div>' +
-							'<\/div>'
+										'<div class="label"></div>' +
+										'<div class="indicator" style="background-position: 0px 0px"></div>' +
+									'</div>' +
+								'</div>' +
+							'</div>'
 						);
 						// setup our animated progress indicator
 						$('#CJModalDialog .indicator').data('storage', {
@@ -353,15 +353,15 @@
 							'<div id="CJModalDialog">' +
 								'<div class="innerBox">' +
 									'<div class="margins">' +
-										'<div class="label"><\/div>' +
-										'<div class="content"><\/div>' +
+										'<div class="label"></div>' +
+										'<div class="content"></div>' +
 										'<div class="buttons">' +
-											'<button name="buttonCANCEL" id="buttonCANCEL" class="input_button">Cancel<\/button>' +
-											'<button name="buttonOK" id="buttonOK" class="input_button">OK<\/button>' +
-										'<\/div>' +
-									'<\/div>' +
-								'<\/div>' +
-							'<\/div>'
+											'<button name="buttonCANCEL" id="buttonCANCEL" class="input_button">Cancel</button>&nbsp;' +
+											'<button name="buttonOK" id="buttonOK" class="input_button">OK</button>' +
+										'</div>' +
+									'</div>' +
+								'</div>' +
+							'</div>'
 						);
 						$('#CJModalDialog #buttonCANCEL').mouseup(function () {
 							displayDialog({
@@ -378,14 +378,14 @@
 							'<div id="CJModalDialog">' +
 								'<div class="innerBox">' +
 									'<div class="margins">' +
-										'<div class="label"><\/div>' +
-										'<div class="content"><\/div>' +
+										'<div class="label"></div>' +
+										'<div class="content"></div>' +
 										'<div class="buttons">' +
-											'<button name="buttonOK" id="buttonOK" class="input_button">OK<\/button>' +
-										'<\/div>' +
-									'<\/div>' +
-								'<\/div>' +
-							'<\/div>'
+											'<button name="buttonOK" id="buttonOK" class="input_button">OK</button>' +
+										'</div>' +
+									'</div>' +
+								'</div>' +
+							'</div>'
 						);
 						$('#CJModalDialog #buttonOK').mouseup(function () {
 							displayDialog({
@@ -409,7 +409,7 @@
 						$('#CJModalDialog .label').html(opts.label);
 						if (typeof opts.content === 'string') {
 							if (opts.type === 'throw') {
-								$('#CJModalDialog .content').html('<div class="clearfix"><span class="ui-icon ui-icon-throw" style="float:left; margin:0 7px 20px 0;"><\/span>' + opts.content + '<\/div><\/div>');
+								$('#CJModalDialog .content').html('<div class="clearfix"><span class="ui-icon ui-icon-throw" style="float:left; margin:0 7px 20px 0;"></span>' + opts.content + '</div></div>');
 							} else {
 								$('#CJModalDialog .content').html(opts.content);
 							}
@@ -417,15 +417,15 @@
 							var err_list = '';
 							$.each(opts.content, function(err_idx) {
 								if (typeof err_idx === 'string' && !(opts.content[err_idx] instanceof Function)) {
-									err_list += '<p>' + opts.content[err_idx] + '<\/p>';
+									err_list += '<p>' + opts.content[err_idx] + '</p>';
 								}
 							});
 							if (err_list !== '' && opts.type === 'throw') {
-								$('#CJModalDialog .content').html('<div class="clearfix"><span class="ui-icon ui-icon-throw" style="float:left; margin:0 7px 20px 0;"><\/span>' + err_list + '<\/div><\/div>');
+								$('#CJModalDialog .content').html('<div class="clearfix"><span class="ui-icon ui-icon-throw" style="float:left; margin:0 7px 20px 0;"></span>' + err_list + '</div></div>');
 							} else if (err_list !== '') {
 								$('#CJModalDialog .content').html(err_list);
 							} else {
-								$('#CJModalDialog .content').html('<div class="clearfix"><span class="ui-icon ui-icon-throw" style="float:left; margin:0 7px 20px 0;"><\/span>An unknown error occurred. (Error message could not be determined)<\/div><\/div>');
+								$('#CJModalDialog .content').html('<div class="clearfix"><span class="ui-icon ui-icon-throw" style="float:left; margin:0 7px 20px 0;"></span>An unknown error occurred. (Error message could not be determined)</div></div>');
 							}
 						}
 						if (typeof opts.cbOk === 'function') {
@@ -458,6 +458,9 @@
 					} else {
 						dfd.resolve();
 					}
+					if (opts.onload && $.isFunction(opts.onload)) {
+						opts.onload.call();
+					}
 				}
 			}).promise();
 		}
@@ -475,7 +478,7 @@
 			$('#directories optgroup').remove();
 			$('#directories').append('<optgroup label="Current Directory Path" title="Current Directory Path">');
 			$(opts.baseRelPath).each(function (intIndex, objValue) {
-				$('#directories').append('<option value="' + objValue + '"' + (intIndex === sys.currentPathIdx ? ' selected="selected"' : '') + '>' + objValue + '<\/option>').attr("disabled", false);
+				$('#directories').append('<option value="' + objValue + '"' + (intIndex === sys.currentPathIdx ? ' selected="selected"' : '') + '>' + objValue + '</option>').attr("disabled", false);
 			});
 			// need to see if we have more than one directory and change the directory NAVIGATION accordingly
 			if (opts.baseRelPath.length > 1 && sys.currentPathIdx > 0) {
@@ -508,7 +511,7 @@
 						success: function (data) {
 							if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 								if (sys.debug) {
-									console.log(data);
+									console.log('doLoadDirectoryImage', data);
 								}
 								displayDialog({
 									type: 'throw',
@@ -526,7 +529,7 @@
 						},
 						error: function (err) {
 							if (sys.debug) {
-								console.log(err.responseText);
+								console.log('doLoadDirectoryImage', err.responseText);
 							}
 							displayDialog({
 								type: 'throw',
@@ -578,7 +581,7 @@
 					async: true,
 					success: function (data) {
 						if (sys.debug) {
-							console.log(data);
+							console.log('getDirectoryListing', data);
 						}
 						if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 							sys.dirContents = [];
@@ -607,7 +610,7 @@
 										console.log($.cookie('cj_dir'));
 									}
 									if ($.isFunction(clb)) {
-										clb.apply();
+										clb.call(this);
 									}
 								}
 							}
@@ -615,7 +618,7 @@
 					},
 					error: function (err) {
 						if (sys.debug) {
-							console.log(err.responseText);
+							console.log('getDirectoryListing', err.responseText);
 						}
 						sys.dirContents = [];
 						displayDialog({
@@ -638,11 +641,11 @@
 		// pass the file to tinyMCE or do stand-alone selection
 		function doFileSelect(fileObj) {
 
-			if (!(typeof fileObj.attr === 'string' || typeof fileObj.date === 'string' || typeof fileObj.dir === 'string' || typeof fileObj.ext === 'string' || typeof fileObj.FULLPATH === 'string' || typeof fileObj.MIME === 'string' || typeof fileObj.height === 'string' || typeof fileObj.height === 'number' || typeof fileObj.name !== 'string' || typeof fileObj.size !== 'number' || typeof fileObj.type !== 'string' || typeof fileObj.width === 'string' || typeof fileObj.width === 'number')) {
+			if (!(typeof fileObj.attr === 'string' || typeof fileObj.date === 'string' || typeof fileObj.dir === 'string' || typeof fileObj.ext === 'string' || typeof fileObj.fullpath === 'string' || typeof fileObj.mime === 'string' || typeof fileObj.height === 'string' || typeof fileObj.height === 'number' || typeof fileObj.name !== 'string' || typeof fileObj.size !== 'number' || typeof fileObj.type !== 'string' || typeof fileObj.width === 'string' || typeof fileObj.width === 'number')) {
 
 				// debug the file selection settings (if debug is turned on and console is available)
 				if (sys.debug) {
-					console.log(fileObj);
+					console.log('doFileSelect', fileObj);
 				}
 
 				displayDialog({
@@ -675,10 +678,10 @@
 			} else {
 
 				// We are a standalone mode. What to do, is up to you...
-				if (opts.callBack !== null) {
+				if ($.isFunction(opts.callBack)) {
 
 					// user passed a callback function
-					opts.callBack(fileObj);
+					opts.callBack.call(null, fileObj);
 
 				} else {
 
@@ -687,7 +690,7 @@
 						type: 'throw',
 						state: 'show',
 						label: 'Standalone Mode Message',
-						content: 'You selected' + (fileObj.dir + fileObj.name) + '<br \/>' + fileObj.FULLPATH
+						content: 'You selected' + (fileObj.dir + fileObj.name) + '<br />' + fileObj.fullpath
 					});
 				}
 
@@ -710,8 +713,8 @@
 				if (dir.length > 0) {
 
 					// init the sidebar list element
-					$('#sidebar').append('<ul><\/ul>');
-					$('#browser').append('<ul><\/ul>');
+					$('#sidebar').append('<ul></ul>');
+					$('#browser').append('<ul></ul>');
 
 					// cycle through the json array and create our directory list items from each entry
 					$.each(dir, function (intIndex, objValue) {
@@ -721,7 +724,7 @@
 						lis = $('<li>').attr({
 							id: 'sidebar_ID' + intIndex,
 							'data-type': objValue.type === 'FILE' ? 'File' : 'Directory'
-						}).addClass(objValue.ext).html('<span data-path="' + objValue.name + '">' + objValue.name + '<\/span>');
+						}).addClass(objValue.ext).html('<span data-path="' + objValue.name + '">' + objValue.name + '</span>');
 
 						// create our BROWSER list items
 						lib = $('<li>').attr({
@@ -742,15 +745,15 @@
 						// create our info box
 						info = $('<div>').addClass('diritem').addClass(objValue.ext).attr('data-name', objValue.name).append(
 							'<div class="icon" data-name="' + objValue.name + '">' +
-								(typeof objValue.width === 'number' && typeof objValue.height === 'number' ? '<div class="imgHolder"><\/div><div class="mask"><\/div>' : '') +
-							'<\/div>' +
-							'<div class="nameinfo cj-state-default ui-corner-all">' +
-								'<div class="name">' + objValue.name + '<\/div>' +
-								'<div class="namefull">' + objValue.name + '<\/div>' +
-								(objValue.type === 'FILE' ? '<div class="size">' + displayFileSize(parseInt(objValue.size, 10)) + '<\/div>' : '') +
-								(parseInt(objValue.width, 10) && parseInt(objValue.height, 10) ? '<div class="dimensions"><span class="width">' + parseInt(objValue.width, 10) + '<\/span> x <span class="height">' + parseInt(objValue.height, 10) + '<\/span> pixels<\/div>' : '') +
-								(objValue.date.length > 0 ? '<div class="modified">' + dateFormat(objValue.date, 'mmm dS, yyyy, h:MM:ss TT') + '<\/div>' : '') +
-								'<div class="mimeType">' + objValue.MIME + '<\/div>' +
+								(typeof objValue.width === 'number' && typeof objValue.height === 'number' ? '<div class="imgHolder"></div><div class="mask"></div>' : '') +
+							'</div>' +
+							'<div class="nameinfo">' +
+								'<div class="name">' + objValue.name + '</div>' +
+								'<div class="namefull">' + objValue.name + '</div>' +
+								(objValue.type === 'FILE' ? '<div class="size">' + displayFileSize(parseInt(objValue.size, 10)) + '</div>' : '') +
+								(parseInt(objValue.width, 10) && parseInt(objValue.height, 10) ? '<div class="dimensions"><span class="width">' + parseInt(objValue.width, 10) + '</span> x <span class="height">' + parseInt(objValue.height, 10) + '</span> pixels</div>' : '') +
+								(objValue.date.length > 0 ? '<div class="modified">' + dateFormat(objValue.date, 'mmm dS, yyyy, h:MM:ss TT') + '</div>' : '') +
+								'<div class="mimeType">' + (objValue.mime || '') + '</div>' +
 							'</div>'
 						);
 
@@ -773,23 +776,22 @@
 
 					// set up our hover and click actions for the SIDEBAR window
 					$('#sidebar ul li').on('mouseenter mousedown', function () {
-						$(this).addClass('hovering ui-state-highlight');
+						$(this).addClass('hovering');
 					}).on('mouseleave mouseup', function () {
-						$(this).removeClass('hovering ui-state-highlight');
+						$(this).removeClass('hovering');
 					}).on('click', function (e) {
 						var $this = $(this),
-							$twin = $('#browser #' + ($this.attr('id')).replace('sidebar_ID', 'browser_ID')),
-							$name = $twin.find('.nameinfo');
+							$twin = $('#browser #' + ($this.attr('id')).replace('sidebar_ID', 'browser_ID'));
 						if ($this.attr('data-type') === 'File') {
-							$('#directoryIn').attr('disabled', true).addClass('ui-state-disabled').off();
+							$('#directoryIn').attr('disabled', true).off();
 							if ($this.hasClass('selected')) {
-								$this.removeClass('selected ui-state-active');
-								$name.removeClass('selected ui-state-active');
+								$this.removeClass('selected');
+								$twin.removeClass('selected');
 								$('#fileSelect,#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 							} else {
-								$('#sidebar ul li,#browser ul li .nameinfo').removeClass('selected ui-state-active');
-								$this.addClass('selected ui-state-active');
-								$name.addClass('selected ui-state-active');
+								$('#sidebar ul li,#browser ul li').removeClass('selected');
+								$this.addClass('selected');
+								$twin.addClass('selected');
 								$('#fileSelect').attr('disabled', false).removeClass('ui-state-disabled');
 								if ($.inArray('fileDelete', opts.actions) > -1) {
 									$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
@@ -802,14 +804,14 @@
 							}
 						} else if ($this.attr('data-type') === 'Directory') {
 							if ($this.hasClass('selected')) {
-								$this.removeClass('selected ui-state-active');
-								$name.removeClass('selected ui-state-active');
+								$this.removeClass('selected');
+								$twin.removeClass('selected');
 								$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
 								$('#directoryIn').attr('disabled', true).off();
 							} else {
-								$('#sidebar ul li,#browser ul li .nameinfo').removeClass('selected ui-state-active');
-								$this.addClass('selected ui-state-active');
-								$name.addClass('selected ui-state-active');
+								$('#sidebar ul li,#browser ul li').removeClass('selected');
+								$this.addClass('selected');
+								$twin.addClass('selected');
 								$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
 								if ($.inArray('deleteDirectory', opts.actions) > -1) {
 									$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
@@ -856,23 +858,22 @@
 
 					// set up our hover and click actions for the BROWSER window
 					$('#browser ul li').on('mouseenter mousedown', function () {
-						$(this).find('.nameinfo').addClass('hovering ui-state-highlight');
+						$(this).addClass('hovering');
 					}).on('mouseleave mouseup', function () {
-						$(this).find('.nameinfo').removeClass('hovering ui-state-highlight');
+						$(this).removeClass('hovering');
 					}).on('click', function (e) {
 						var $this = $(this),
-							$name = $this.find('.nameinfo'),
 							$twin = $('#sidebar #' + ($this.attr('id')).replace('browser_ID', 'sidebar_ID'));
 						if ($this.attr('data-type') === 'File') {
 							$('#directoryIn').attr('disabled', true).off();
-							if ($name.hasClass('selected')) {
-								$name.removeClass('selected ui-state-active');
-								$twin.removeClass('selected ui-state-active');
+							if ($this.hasClass('selected')) {
+								$this.removeClass('selected');
+								$twin.removeClass('selected');
 								$('#fileSelect,#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 							} else {
-								$('#sidebar ul li,#browser ul li .nameinfo').removeClass('selected ui-state-active');
-								$name.addClass('selected ui-state-active');
-								$twin.addClass('selected ui-state-active');
+								$('#sidebar ul li,#browser ul li').removeClass('selected');
+								$this.addClass('selected');
+								$twin.addClass('selected');
 								$('#fileSelect').attr('disabled', false).removeClass('ui-state-disabled');
 								if ($.inArray('fileDelete', opts.actions) > -1) {
 									$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
@@ -884,15 +885,15 @@
 								}, 'fast'); // #sidebar css position top = 43px
 							}
 						} else if ($this.attr('data-type') === 'Directory') {
-							if ($name.hasClass('selected')) {
-								$name.removeClass('selected ui-state-active');
-								$twin.removeClass('selected ui-state-active');
+							if ($this.hasClass('selected')) {
+								$this.removeClass('selected');
+								$twin.removeClass('selected');
 								$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
 								$('#directoryIn').attr('disabled', true).off();
 							} else {
-								$('#sidebar ul li,#browser ul li .nameinfo').removeClass('selected ui-state-active');
-								$name.addClass('selected ui-state-active');
-								$twin.addClass('selected ui-state-active');
+								$('#sidebar ul li,#browser ul li').removeClass('selected');
+								$this.addClass('selected');
+								$twin.addClass('selected');
 								$('#fileSelect').attr('disabled', true).addClass('ui-state-disabled');
 								if ($.inArray('deleteDirectory', opts.actions) > -1) {
 									$('#fileDelete').attr('disabled', false).removeClass('ui-state-disabled');
@@ -953,10 +954,10 @@
 					// setup droppable's for directories
 					$('#browser ul li[data-type="Directory"]').droppable({
 						over: function(event, ui) {
-							$(this).find('.nameinfo').addClass('hovering ui-state-highlight');
+							$(this).addClass('hovering');
 						},
 						out: function(event, ui) {
-							$(this).find('.nameinfo').removeClass('hovering ui-state-highlight');
+							$(this).removeClass('hovering');
 						},
 						drop: function(event, ui) {
 							var $this = $(this);
@@ -1039,8 +1040,8 @@
 				}
 
 				if (sys.debug) {
-					console.log('prms', prms);
-					console.log('dataTransfer.files', dataTransfer.files);
+					console.log('drop>prms', prms);
+					console.log('drop>dataTransfer.files', dataTransfer.files);
 				}
 
 				if (prms && dataTransfer.files.length > 0) {
@@ -1094,7 +1095,7 @@
 							xhr.onload = function(ev) {
 								try {
 									if (sys.debug) {
-										console.log(xhr.responseText);
+										console.log('drop', xhr.responseText);
 									}
 									var data = $.trim(xhr.responseText),
 										json = JSON.parse(data);
@@ -1132,8 +1133,8 @@
 									$trg.removeClass('drop_hover drop');
 								} catch(err) {
 									if (sys.debug) {
-										console.log('error', err);
-										console.log('xhr.responseText', xhr.responseText);
+										console.log('drop>error', err);
+										console.log('drop>xhr.responseText', xhr.responseText);
 									}
 									$trg.removeClass('drop_hover drop');
 									displayDialog({
@@ -1147,7 +1148,7 @@
 							};
 							xhr.error = function(ev) {
 								if (sys.debug) {
-									console.log('upload error', ev);
+									console.log('drop>upload error', ev);
 								}
 								displayDialog({
 									type: 'throw',
@@ -1200,7 +1201,7 @@
 		function setup() {
 
 			// create a modal box background (make sure click throughs don't happen)
-			$('body').append('<div id="CJModalBGround"><\/div>').on('click', function (e) {
+			$('body').append('<div id="CJModalBGround"></div>').on('click', function (e) {
 				e.stopImmediatePropagation();
 				return false;
 			});
@@ -1233,8 +1234,8 @@
 
 			// set up deselect if the user clicks the browser window
 			$('#sidebar,#browser').on('click', function (e) {
-				$('#sidebar li').removeClass('selected ui-state-active');
-				$('#browser li .nameinfo').removeClass('selected ui-state-active');
+				$('#sidebar li').removeClass('selected');
+				$('#browser li').removeClass('selected');
 				$('#fileSelect,#fileDelete').attr('disabled', true).addClass('ui-state-disabled');
 				$('#directoryIn').attr('disabled', true).off();
 				e.stopImmediatePropagation();
@@ -1251,7 +1252,7 @@
 
 			// determine which buttons to show based on user passed actions
 			if ($.inArray('navigateDirectory', opts.actions) === -1) {
-				$('#directoryOptions').remove();
+				$('#directoryOut').parent().remove();
 			} else {
 				// set up directory NAVIGATION buttons
 				$('#directoryOut').mouseup(function () {
@@ -1267,7 +1268,7 @@
 				});
 
 				// set up the directories SELECT menu
-				$('#directories').change(function () {
+				$('#directories').on('change', function () {
 					var $this = $(this);
 					if ($this.get(0).selectedIndex < sys.currentPathIdx) {
 						opts.baseRelPath.remove($this.get(0).selectedIndex + 1, opts.baseRelPath.length - $this.get(0).selectedIndex + 1);
@@ -1280,7 +1281,7 @@
 			}
 
 			if ($.inArray('createDirectory', opts.actions) === -1) {
-				$('#fileOptions #newfolder').remove();
+				$('#newfolder').remove();
 			} else {
 				// handle the NEW FOLDER action
 				$('#newfolder').mouseup(function () {
@@ -1294,9 +1295,9 @@
 						content: (
 							'<form name="CJNewDirectoryForm" id="CJNewDirectoryForm" action="javascript:void(0);" method="post">' +
 								'<div class="fields">' +
-									'<input type="text" name="directoryName" id="directoryName" class="input_text" \/>' +
-								'<\/div>' +
-							'<\/form>'
+									'<input type="text" name="directoryName" id="directoryName" class="input_text" />' +
+								'</div>' +
+							'</form>'
 						),
 						cbOk: function (str) {
 							var dirName = $('#CJNewDirectoryForm #directoryName').val(),
@@ -1335,7 +1336,7 @@
 									success: function (data) {
 										if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 											if (sys.debug) {
-												console.log(data);
+												console.log('setup', data);
 											}
 											clearTimer();
 											displayDialog({
@@ -1355,7 +1356,7 @@
 									},
 									error: function (err) {
 										if (sys.debug) {
-											console.log(err.responseText);
+											console.log('setup', err.responseText);
 										}
 										clearTimer();
 										displayDialog({
@@ -1377,7 +1378,7 @@
 			}
 
 			if ($.inArray('deleteDirectory', opts.actions) === -1 && $.inArray('fileDelete', opts.actions) === -1) {
-				$('#fileOptions #fileDelete').remove();
+				$('#fileDelete').remove();
 			} else {
 				// setup our DELETE action
 				$('#fileDelete').mouseup(function () {
@@ -1390,12 +1391,12 @@
 							type: 'confirm',
 							state: 'show',
 							label: 'Delete file...',
-							content: 'This ' + ($('#browser ul li.selected').attr('data-name')).toLowerCase() + ' will be deleted and cannot be recovered. Are you sure you want to perform this action?',
+							content: 'This ' + type + ' will be deleted and cannot be recovered. Are you sure you want to perform this action?',
 							cbOk: function () {
 								var curFile = $('#browser ul li.selected .icon').attr('data-name'),
-									curType = $('#browser ul li.selected').attr('data-type'),
+									curType = type,
 									json;
-								if (typeof curFile === 'string' && curFile.length > 0 && (curType === 'File' || curType === 'Directory')) {
+								if (typeof curFile === 'string' && curFile.length > 0 && (curType === 'file' || curType === 'directory')) {
 									displayDialog({
 										type: 'progress',
 										state: 'show',
@@ -1420,7 +1421,7 @@
 										type: 'post',
 										url: 'assets/engines/' + opts.engine + '/' + opts.handler,
 										data: {
-											method: curType === 'File' ? 'doDeleteFile' : 'doDeleteDirectory',
+											method: curType === 'file' ? 'doDeleteFile' : 'doDeleteDirectory',
 											returnFormat: 'json',
 											timeOut: parseInt(opts.timeOut, 10),
 											baseRelPath: window.encodeURIComponent(opts.baseRelPath[sys.currentPathIdx]),
@@ -1432,7 +1433,7 @@
 										success: function (data) {
 											if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 												if (sys.debug) {
-													console.log(data);
+													console.log('fileDelete', data);
 												}
 												clearTimer();
 												displayDialog({
@@ -1452,7 +1453,7 @@
 										},
 										error: function (err) {
 											if (sys.debug) {
-												console.log(err.responseText);
+												console.log('fileDelete', err.responseText);
 											}
 											clearTimer();
 											displayDialog({
@@ -1476,7 +1477,7 @@
 
 			// handle the UPLOAD action
 			if ($.inArray('fileUpload', opts.actions) === -1) {
-				$('#fileOptions #fileUpload').remove();
+				$('#fileUpload').remove();
 			} else {
 				$('#fileUpload').mouseup(function () {
 					var $this = $(this);
@@ -1490,23 +1491,23 @@
 						content: (
 							'<form name="CJUploadForm" id="CJUploadForm" action="javascript:void(0);" method="post">' +
 								'<div class="fields">' +
-									'<input type="file" name="fileUploadField" id="fileUploadField" \/>' +
-								'<\/div>' +
-							'<\/form>'
+									'<input type="file" name="fileUploadField" id="fileUploadField" />' +
+								'</div>' +
+							'</form>'
 						),
 						cbOk: function () {
-							if ($('#CJUploadForm #fileUploadField').val() !== '') {
-								$('#CJFileBrowser #CJFileBrowserForm').append(
+							if ($('#fileUploadField').val() !== '') {
+								$('#CJFileBrowserForm').append(
 									'<div class="hider">' +
-										'<input type="hidden" name="baseUrl" value="' + window.encodeURIComponent(opts.baseRelPath[sys.currentPathIdx]) + '" \/>' +
-										'<input type="hidden" name="fileExts" value="' + window.encodeURIComponent(opts.fileExts) + '" \/>' +
-										'<input type="hidden" name="maxSize" value="' + window.encodeURIComponent(opts.maxSize) + '" \/>' +
-										'<input type="hidden" name="maxWidth" value="' + window.encodeURIComponent(opts.maxWidth) + '" \/>' +
-										'<input type="hidden" name="maxHeight" value="' + window.encodeURIComponent(opts.maxHeight) + '" \/>' +
-										'<input type="hidden" name="timeOut" value="' + parseInt(opts.timeOut, 10) + '" \/>' +
-									'<\/div>'
+										'<input type="hidden" name="baseUrl" value="' + window.encodeURIComponent(opts.baseRelPath[sys.currentPathIdx]) + '" />' +
+										'<input type="hidden" name="fileExts" value="' + window.encodeURIComponent(opts.fileExts) + '" />' +
+										'<input type="hidden" name="maxSize" value="' + window.encodeURIComponent(opts.maxSize) + '" />' +
+										'<input type="hidden" name="maxWidth" value="' + window.encodeURIComponent(opts.maxWidth) + '" />' +
+										'<input type="hidden" name="maxHeight" value="' + window.encodeURIComponent(opts.maxHeight) + '" />' +
+										'<input type="hidden" name="timeOut" value="' + parseInt(opts.timeOut, 10) + '" />' +
+									'</div>'
 								);
-								$('#CJUploadForm #fileUploadField').appendTo($('#CJFileBrowser #CJFileBrowserForm .hider'));
+								$('#fileUploadField').appendTo($('#CJFileBrowserForm .hider'));
 								displayDialog({
 									type: 'confirm',
 									state: 'hide'
@@ -1517,13 +1518,16 @@
 						},
 						cbCancel: function () {
 							$('#fileUpload').attr('disabled', false).removeClass('ui-state-disabled');
+						},
+						onload: function() {
+							// provided an optional callback on load
 						}
 					});
 					// fix the file upload input
-					$('#CJUploadForm #fileUploadField').css({
+					$('#fileUploadField').css({
 						opacity: 0.0
-					}).change(function () {
-						$('#CJUploadForm #uploadFakeFile').val($(this).val());
+					}).on('change', function () {
+						$('#uploadFakeFile').val($(this).val());
 					});
 					$('#CJUploadForm .fields').append(
 					$('<div></div>').addClass('fakefile').append(
@@ -1601,7 +1605,7 @@
 
 					// We don't know where we are at. So we need to determine the path to do the form submit.
 					// not sure if this is elegant or a mess, but it works.
-					base_path = (document.location.href.split('?')[0]).replace(/(\/|\\)(cjfilebrowser|index)\.html/g, '');
+					base_path = (document.location.href.split('?')[0]).replace(/(\/|\\)(cjfilebrowser|index)\.(html|cfm)/g, '');
 					$formElem.attr({
 						action: base_path + '/assets/engines/' + opts.engine + '/' + opts.handler + '?method=doFileUpload',
 						method: 'post',
@@ -1615,7 +1619,7 @@
 
 			// handle the file SELECT action
 			if ($.inArray('fileSelect', opts.actions) === -1) {
-				$('#fileOptions #fileSelect').remove();
+				$('#fileSelect').remove();
 			} else {
 				$('#fileSelect').mouseup(function () {
 					var fileID = parseInt($('#browser ul li.selected').attr('ID').replace('browser_ID', ''), 10);
@@ -1648,7 +1652,7 @@
 
 		}
 
-		// initial test to see if our handler exists
+		// initial test to see if our handler exists and set up some defaults
 		function getHandler() {
 			var json, pathArr,
 				re = new RegExp('\\|//', 'gim');
@@ -1690,9 +1694,8 @@
 					expires: -1,
 					path: sys.basePath
 				});
-				throw('Oops! There was a problem\n\nThe initial path is not valid (' + sys.basePath + ').');
+				throw('Oops! There was a problem!\nThe initial path is not valid (' + sys.basePath + ').');
 			} else {
-
 				json = $.parseJSON(
 				$.ajax({
 					type: 'post',
@@ -1709,18 +1712,18 @@
 					success: function (data) {
 						if (typeof data !== 'object' || typeof data.error !== 'boolean' || data.error !== false) {
 							if (sys.debug) {
-								console.log(data);
+								console.log('isHandlerReady', data);
 							}
-							throw('Oops! There was a problem\n\nThe handler engine did not respond properly during initialization.');
+							throw('Oops! There was a problem!\nThe handler engine did not respond properly during initialization.');
 						} else {
 							setup();
 						}
 					},
 					error: function (err) {
 						if (sys.debug) {
-							console.log(err.responseText);
+							console.log('isHandlerReady', err.responseText);
 						}
-						throw('Oops! There was a problem\n\nThe handler engine did not respond properly during initialization.');
+						throw('Oops! There was a problem!\nThe handler engine did not respond properly during initialization.');
 					}
 				}).responseText);
 			}
@@ -1801,7 +1804,6 @@
 					delta = null;
 					timer = null;
 					// truncate the file names
-					console.log(x);
 					$('#sidebar ul li span').each(function() {
 						$(this).text($(this).attr('title'));
 					}).textTruncate();
@@ -1857,20 +1859,23 @@
 						'</div>' +
 					'</div>' +
 					'<div id="content">' +
-						'<div id="sidebar" class="ui-state-highlight"></div>' +
+						'<div id="sidebar"></div>' +
 						'<div id="browser"></div>' +
 					'</div>' +
 					'<div id="footer"></div>'
 				);
 
 				// fix sidebar/browser top margin
+				$('#CJFileBrowser').css({
+					top: $('#info').outerHeight()
+				});
 				$('#content').css({
-					top: $('#header').height()
+					top: $('#header').outerHeight() + $('#info').outerHeight()
 				});
 
 				// setup the footer
-				$obj.find('#footer').append('<div class="callout"><div class="margins">CJ File Browser <strong id="CJVersion">v' + sys.version + '<\/strong>. Created by <a href="http://www.cjboco.com/" target="_blank" title="Creative Juice Bo. Co.">Creative Juice Bo. Co.<\/a><\/div><\/div>');
-				$obj.find('#footer').append('<div class="stats"><\/div>');
+				$obj.find('#footer').append('<div class="callout"><div class="margins">CJ File Browser <strong id="CJVersion">v' + sys.version + '</strong>. Created by <a href="http://www.cjboco.com/" target="_blank" title="Creative Juice Bo. Co.">Creative Juice Bo. Co.</a></div></div>');
+				$obj.find('#footer').append('<div class="stats"></div>');
 
 				// if we are a tinyMCE plug-in then we need to grab the user settings
 				if (typeof tinyMCE !== 'undefined') {
@@ -1891,7 +1896,7 @@
 						opts.callBack = null;
 					} else {
 						// problem initializing the script
-						throw('Oops! There was a problem\n\nVariables were not initialized properly throw tinyMCE or missing values.');
+						throw('Oops! There was a problem!\nVariables were not initialized properly throw tinyMCE or missing values.');
 					}
 
 				} else if (options) {
@@ -1908,7 +1913,7 @@
 				if ((typeof opts.actions !== 'object' || opts.actions.length === 0) || (typeof opts.baseRelPath !== 'object' || opts.baseRelPath.length === 0) || (typeof opts.fileExts !== 'string' || opts.fileExts.length === 0) || (typeof opts.maxSize !== 'number' || opts.maxSize === 0) || (typeof opts.maxWidth !== 'number' || opts.maxWidth === 0) || (typeof opts.maxHeight !== 'number' || opts.maxHeight === 0) || (typeof opts.showImgPreview !== 'boolean') || (typeof opts.engine !== 'string' || opts.engine === '') || (typeof opts.handler !== 'string' || opts.handler === '') || (typeof opts.timeOut !== 'number' || opts.timeOut < 0) || (typeof opts.callBack !== 'function' && opts.callBack !== null) || (parseInt(sys.currentPathIdx, 10) || 0)) {
 
 					// problem initializing the script
-					throw('Oops! There was a problem\n\nVariables were not initialized properly or missing values.');
+					throw('Oops! There was a problem!\nVariables were not initialized properly or missing values.');
 
 				} else {
 
