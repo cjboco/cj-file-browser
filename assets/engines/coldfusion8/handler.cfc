@@ -340,16 +340,14 @@
 				<cfset locvar['baseAbsPath'] = locvar.baseAbsPath & "/" />
 			</cfif>
 
-			<!--- called from assets/engines/ENGINE folder
+			<!--- called from assets/engines/ENGINE folder --->
 			<cfif FileExists("#locvar.baseAbsPath#security.cfm")>
 				<cffile action="read" file="#locvar.baseAbsPath#security.cfm" variable="locvar.xml">
 			<cfelseif FileExists("#locvar.baseAbsPath#security.php")>
 				<cffile action="read" file="#locvar.baseAbsPath#security.php" variable="locvar.xml">
 			<cfelse>
 				<cffile action="read" file="#locvar.baseAbsPath#security.xml" variable="locvar.xml">
-			</cfif> --->
-
-			<cffile action="read" file="#locvar.baseAbsPath#security.xml" variable="locvar.xml">
+			</cfif>
 
 			<cfif isDefined('locvar.xml') and Len(locvar.xml) gt 0>
 				<cfset locvar['xml'] = XMLParse(locvar.xml) />
@@ -468,7 +466,7 @@
 			</cfif>
 			<cfcatch type="any">
 				<cfset result['error'] = true />
-				<cfset result['msg'] = cfcatch />
+				<cfset result['msg'] = cfcatch.message />
 			</cfcatch>
 		</cftry>
 		<cfreturn result />

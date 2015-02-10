@@ -77,7 +77,7 @@
 					/*
 						fileObj : {
 							attr: ""
-							date: "August 20, 2014 12:22:07"
+							date: "August 20, 2015 12:22:07"
 							dir: "/images/"
 							ext: "PNG"
 							fullpath: "C:\home\wwwroot\images\myfile.png"
@@ -93,7 +93,7 @@
 						if (QueryString.isTMCE && QueryString.isTMCE == "false") {
 							console.log(parent);
 							if ($.isFunction(parent.fileSelectCallback)) {
-								parent.fileSelectCallback.call(null, fileObj);
+								parent.fileSelectCallback.call(null, fileObj.dir + fileObj.name);
 							}
 						} else if ( parent.tinymce.majorVersion < 4 ) {
 							// tinymce 3.X
@@ -105,7 +105,7 @@
 							parent.tinymce.activeEditor.windowManager.close();
 						}
 					} else {
-						throw ('Problems reading file selction object.');
+						throw ('Problems reading file selection object.');
 					}
 				}
 			});
