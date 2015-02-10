@@ -1,7 +1,7 @@
-CJ File Browser v4.0 (Beta)
+CJ File Browser v4.0.2 (Beta)
 =======================
 
-Copyright (c) 2011 Creative Juices Bo. Co.
+Copyright (c) 2015 Creative Juices Bo. Co.
 Author: Doug Jones [www.cjboco.com](http://www.cjboco.com/)
 Licensed under the MIT.
 
@@ -26,3 +26,7 @@ Known Issues
 * I've started implementing "drag & drop" to allow you to move files and directories. The drag and drop is set up, but it's not doing anything at this point.
 
 * I've started adding the frame work classes to make this jQuery UI Themable. Haven't had a lot of time to think this through yet, but you might see some weird stuff as I play around.
+
+Random Stuff
+=======================
+I added an Application.cfc that resets any other application.cfc's. You only need this if you are using ColdFusion.

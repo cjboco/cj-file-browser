@@ -69,8 +69,8 @@
 	------------------------------------------------------------------------ --->
 	<cffunction name="getPathToDirectory" access="private" returntype="string" output="no">
 		<cfset var result = StructNew() />
-		<cfset locvar.exp2 = GetDirectoryFromPath(GetCurrentTemplatePath()) />
-		<cfset locvar.exp2 = Replace(locvar.exp2, "\", "/", "ALL") />
+		<cfset locvar['exp2'] = GetDirectoryFromPath(GetCurrentTemplatePath()) />
+		<cfset locvar['exp2'] = Replace(locvar.exp2, "\", "/", "ALL") />
 		<cfreturn ReplaceNoCase(locvar.exp2, "assets/engines/coldfusion8/", "", "ALL") />
 	</cffunction>
 
@@ -85,7 +85,7 @@
 		http://www.cjboco.com/
 
 	------------------------------------------------------------------------ --->
-	<cffunction name="isHandlerReady" access="remote" returntype="any" output="no">
+	<cffunction name="isHandlerReady" access="remote" returntype="any" output="true">
 		<cfargument name="version" type="string" required="yes" />
 		<cfargument name="dirPath" type="string" required="no" default="" />
 		<cfargument name="timeOut" type="numeric" required="no" default="900" />
@@ -103,7 +103,7 @@
 				</cfif>
 
 				<!--- check security file version --->
-				<cfset locvar.version = getSecuritySettings('version') />
+				<cfset locvar['version'] = getSecuritySettings('version') />
 				<cfif isStruct(locvar.version) and isDefined("locvar.version.error") and NOT locvar.version.error>
 					<cfif isDefined("locvar.version.version") and locvar.version.version eq arguments.version>
 						<!--- everything ok --->
@@ -121,11 +121,11 @@
 				</cfif>
 
 				<!--- check security file directories (and validate inital path) --->
-				<cfset locvar.validatePath = getSecuritySettings('directories') />
+				<cfset locvar['validatePath'] = getSecuritySettings('directories') />
 				<cfif isStruct(locvar.validatePath) and isDefined("locvar.validatePath.error") and NOT locvar.validatePath.error>
 					<!--- everything checks out, now validate the directory path (if provided) --->
 					<cfif Len(URLDecode(arguments.dirPath)) gt 0>
-						<cfset locvar.path = isPathValid(URLDecode(arguments.dirPath)) />
+						<cfset locvar['path'] = isPathValid(URLDecode(arguments.dirPath)) />
 						<cfif NOT locvar.path>
 							<cfset result['error'] = true />
 							<cfif isDefined("locvar.version.error_msg")>
@@ -145,7 +145,7 @@
 				</cfif>
 
 				<!--- check security file actions --->
-				<cfset locvar.validateAction = getSecuritySettings('actions') />
+				<cfset locvar['validateAction'] = getSecuritySettings('actions') />
 				<cfif isStruct(locvar.validateAction) and isDefined("locvar.validateAction.error") and NOT locvar.validateAction.error>
 					<!--- everything checks out --->
 				<cfelse>
@@ -158,7 +158,7 @@
 				</cfif>
 
 				<!--- check security file extensions --->
-				<cfset locvar.isFileExtValid = getSecuritySettings('fileExts') />
+				<cfset locvar['isFileExtValid'] = getSecuritySettings('fileExts') />
 				<cfif isStruct(locvar.isFileExtValid) and isDefined("locvar.isFileExtValid.error") and NOT locvar.isFileExtValid.error>
 					<!--- everything checks out --->
 				<cfelse>
@@ -205,9 +205,9 @@
 			<cfif Len(locvar.baseRelPath) gt 0>
 				<!--- to save time on disk reads, we can pass the directory list --->
 				<cfif isStruct(arguments.settings) and isDefined("arguments.settings.error") and NOT arguments.settings.error and isDefined("arguments.settings.dirListRel") and ListLen(arguments.settings.dirListRel) gt 0>
-					<cfset locvar.authDirs = arguments.settings />
+					<cfset locvar['authDirs'] = arguments.settings />
 				<cfelse>
-					<cfset locvar.authDirs = getSecuritySettings('directories') />
+					<cfset locvar['authDirs'] = getSecuritySettings('directories') />
 				</cfif>
 				<cfif isDefined("locvar.authDirs.error") and locvar.authDirs.error>
 					<cfreturn false />
@@ -252,9 +252,9 @@
 			<cfif Len(arguments.userAction) gt 0>
 				<!--- to save time on disk reads, we can pass the directory list --->
 				<cfif isStruct(arguments.settings) and isDefined("arguments.settings.error") and NOT arguments.settings.error and isDefined("arguments.settings.actionList") and ListLen(arguments.settings.actionList) gt 0>
-					<cfset locvar.authActions = arguments.settings />
+					<cfset locvar['authActions'] = arguments.settings />
 				<cfelse>
-					<cfset locvar.authActions = getSecuritySettings('actions') />
+					<cfset locvar['authActions'] = getSecuritySettings('actions') />
 				</cfif>
 				<cfif isDefined("locvar.authActions.error") and locvar.authActions.error>
 					<cfreturn false />
@@ -291,9 +291,9 @@
 			<cfif Len(arguments.fileExt) gt 0>
 				<!--- to save time on disk reads, we can pass the directory list --->
 				<cfif isStruct(arguments.settings) and isDefined("arguments.settings.error") and NOT arguments.settings.error and isDefined("arguments.settings.extList") and ListLen(arguments.settings.extList) gt 0>
-					<cfset locvar.authExts = arguments.settings />
+					<cfset locvar['authExts'] = arguments.settings />
 				<cfelse>
-					<cfset locvar.authExts = getSecuritySettings('fileExts') />
+					<cfset locvar['authExts'] = getSecuritySettings('fileExts') />
 				</cfif>
 				<cfif isDefined("locvar.authExts.error") and locvar.authExts.error>
 					<cfreturn false />
@@ -335,41 +335,43 @@
 		<cftry>
 
 			<!--- we need to grab the path to this directory --->
-			<cfset locvar.baseAbsPath = getPathToDirectory() />
+			<cfset locvar['baseAbsPath'] = getPathToDirectory() />
 			<cfif Right(locvar.baseAbsPath, 1) neq "/">
-				<cfset locvar.baseAbsPath = locvar.baseAbsPath & "/" />
+				<cfset locvar['baseAbsPath'] = locvar.baseAbsPath & "/" />
 			</cfif>
 
-			<!--- called from assets/engines/ENGINE folder --->
+			<!--- called from assets/engines/ENGINE folder
 			<cfif FileExists("#locvar.baseAbsPath#security.cfm")>
 				<cffile action="read" file="#locvar.baseAbsPath#security.cfm" variable="locvar.xml">
 			<cfelseif FileExists("#locvar.baseAbsPath#security.php")>
 				<cffile action="read" file="#locvar.baseAbsPath#security.php" variable="locvar.xml">
 			<cfelse>
 				<cffile action="read" file="#locvar.baseAbsPath#security.xml" variable="locvar.xml">
-			</cfif>
+			</cfif> --->
+
+			<cffile action="read" file="#locvar.baseAbsPath#security.xml" variable="locvar.xml">
 
 			<cfif isDefined('locvar.xml') and Len(locvar.xml) gt 0>
-				<cfset locvar.xml = XMLParse(locvar.xml) />
+				<cfset locvar['xml'] = XMLParse(locvar.xml) />
 				<cfif isXml(locvar.xml)>
 
 					<!--- security paths --->
 					<cfif arguments.settingType eq "directories">
 
-						<cfset locvar.xmlSettings = XMLSearch(locvar.xml,"cjFileBrowser/directoriesAllowed/directory") />
+						<cfset locvar['xmlSettings'] = XMLSearch(locvar.xml,"cjFileBrowser/directoriesAllowed/directory") />
 
 						<cfif ArrayLen(locvar.xmlSettings) gt 0>
-							<cfset locvar.dirListAbs = "" />
-							<cfset locvar.dirListRel = "" />
+							<cfset locvar['dirListAbs'] = "" />
+							<cfset locvar['dirListRel'] = "" />
 							<cfloop index="locvar.cnt" from="1" to="#ArrayLen(locvar.xmlSettings)#">
-								<cfset locvar.attr = locvar.xmlSettings[locvar.cnt].XmlAttributes.type />
+								<cfset locvar['attr'] = locvar.xmlSettings[locvar.cnt].XmlAttributes.type />
 								<cfif locvar.attr eq "absolute">
 									<cfif Len(locvar.xmlSettings[locvar.cnt].XmlText) gt 0>
-										<cfset locvar.dirListAbs = ListAppend(locvar.dirListAbs, locvar.xmlSettings[locvar.cnt].XmlText) />
+										<cfset locvar['dirListAbs'] = ListAppend(locvar.dirListAbs, locvar.xmlSettings[locvar.cnt].XmlText) />
 									</cfif>
 								<cfelseif locvar.attr eq "relative">
 									<cfif Len(locvar.xmlSettings[locvar.cnt].XmlText) gt 0>
-										<cfset locvar.dirListRel = ListAppend(locvar.dirListRel, locvar.xmlSettings[locvar.cnt].XmlText) />
+										<cfset locvar['dirListRel'] = ListAppend(locvar.dirListRel, locvar.xmlSettings[locvar.cnt].XmlText) />
 									</cfif>
 								</cfif>
 							</cfloop>
@@ -389,12 +391,12 @@
 					<!--- security actions --->
 					<cfelseif arguments.settingType eq "actions">
 
-						<cfset locvar.xmlSettings = XMLSearch(locvar.xml,"cjFileBrowser/actionsAllowed/action") />
+						<cfset locvar['xmlSettings'] = XMLSearch(locvar.xml,"cjFileBrowser/actionsAllowed/action") />
 						<cfif ArrayLen(locvar.xmlSettings) gt 0>
-							<cfset locvar.actionList = "" />
+							<cfset locvar['actionList'] = "" />
 							<cfloop index="locvar.cnt" from="1" to="#ArrayLen(locvar.xmlSettings)#">
 								<cfif Len(locvar.xmlSettings[locvar.cnt].XmlText) gt 0>
-									<cfset locvar.actionList = ListAppend(locvar.actionList, locvar.xmlSettings[locvar.cnt].XmlText) />
+									<cfset locvar['actionList'] = ListAppend(locvar.actionList, locvar.xmlSettings[locvar.cnt].XmlText) />
 								</cfif>
 							</cfloop>
 							<!--- they may have provided blank entries, this is not allowed --->
@@ -414,16 +416,16 @@
 					<!--- security file extensions --->
 					<cfelseif arguments.settingType eq "fileExts">
 
-						<cfset locvar.xmlSettings = XMLSearch(locvar.xml,"cjFileBrowser/fileExtsAllowed/fileExt") />
+						<cfset locvar['xmlSettings'] = XMLSearch(locvar.xml,"cjFileBrowser/fileExtsAllowed/fileExt") />
 						<cfif ArrayLen(locvar.xmlSettings) gt 0>
-							<cfset locvar.extList = "" />
+							<cfset locvar['extList'] = "" />
 							<cfloop index="locvar.cnt" from="1" to="#ArrayLen(locvar.xmlSettings)#">
 								<cfif Len(locvar.xmlSettings[locvar.cnt].XmlText) gt 0>
-									<cfset locvar.extList = ListAppend(locvar.extList, Trim(locvar.xmlSettings[locvar.cnt].XmlText)) />
+									<cfset locvar['extList'] = ListAppend(locvar.extList, Trim(locvar.xmlSettings[locvar.cnt].XmlText)) />
 								</cfif>
 							</cfloop>
 							<!--- remove any spaced between the list items ", " or " ," --->
-							<cfset locvar.extList = ReReplace(locvar.extList, "[\s]*,[\s]*",",","ALL") />
+							<cfset locvar['extList'] = ReReplace(locvar.extList, "[\s]*,[\s]*",",","ALL") />
 							<cfif ListLen(locvar.extList) gt 0>
 								<cfset result['error'] = false />
 								<cfset result['extList'] = locvar.extList />
@@ -466,7 +468,7 @@
 			</cfif>
 			<cfcatch type="any">
 				<cfset result['error'] = true />
-				<cfset result['msg'] = cfcatch.message />
+				<cfset result['msg'] = cfcatch />
 			</cfcatch>
 		</cftry>
 		<cfreturn result />
@@ -525,7 +527,7 @@
 				<cfif DirectoryExists(locvar.absBaseUrl)>
 					<cfdirectory action="list" directory="#locvar.absBaseUrl#" name="locvar.qry" sort="name" />
 					<cfif locvar.qry.recordCount gt 0>
-						<cfset locvar['idx'] = 1 />
+						<cfset locvar.idx = 1 />
 						<cfloop query="locvar.qry">
 							<cfif (arguments.showInv or (NOT arguments.showInv and Left(locvar.qry.name,1) neq "."))>
 								<cfif locvar.qry.type eq "file" and Find(".",locvar.qry.name) gt 1>
@@ -618,8 +620,8 @@
 			</cfif>
 
 			<!--- preload our security settings (since we have to read this in each time) --->
-			<cfset locvar.authDirs = getSecuritySettings('directories') />
-			<cfset locvar.authActions = getSecuritySettings('actions') />
+			<cfset locvar['authDirs'] = getSecuritySettings('directories') />
+			<cfset locvar['authActions'] = getSecuritySettings('actions') />
 
 			<!--- validate "navigateDirectory" action and path --->
 			<cfif NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
@@ -641,7 +643,7 @@
 
 			<cfelse>
 
-				<cfset locvar.absFilePath = ExpandPath(locvar.baseRelPath & arguments.fileName) />
+				<cfset locvar['absFilePath'] = ExpandPath(locvar.baseRelPath & arguments.fileName) />
 				<cfset result['error'] = false />
 				<cfset result['msg'] = "" />
 				<cfset result['elemID'] = arguments.elemID />
@@ -649,13 +651,14 @@
 				<cfif FileExists(locvar.absFilePath)>
 					<cfimage action="read" name="locvar.img_input" source="#locvar.absFilePath#" />
 					<cfif locvar.img_input["width"] gt variables.thumb_width or locvar.img_input["height"] gt variables.thumb_height>
-						<cfset locvar.imgInfo = calcScaleInfo(locvar.img_input["width"], locvar.img_input["height"], variables.thumb_width, variables.thumb_height, "fit")>
-						<cfset result['imgStr'] = '<img src="#locvar.baseRelPath##arguments.fileName#" border="0" width="#locvar.imgInfo.width#" height="#locvar.imgInfo.height#" style="margin-top:#locvar.imgInfo.offset.y#px;margin-left:#locvar.imgInfo.offset.x#px;" />' />
+						<cfset locvar['imgInfo'] 				= calcScaleInfo(locvar.img_input["width"], locvar.img_input["height"], variables.thumb_width, variables.thumb_height, "fit")>
+						<cfset result['imgStr'] 				= '<img src="#locvar.baseRelPath##arguments.fileName#" border="0" width="#locvar.imgInfo.width#" height="#locvar.imgInfo.height#" style="margin-top:#locvar.imgInfo.offset.y#px;margin-left:#locvar.imgInfo.offset.x#px;" />' />
 					<cfelse>
-						<cfset locvar.imgInfo.offset = StructNew() />
-						<cfset locvar.imgInfo.offset.x = Int((variables.thumb_width / 2) - (locvar.img_input["width"] / 2)) />
-						<cfset locvar.imgInfo.offset.y = Int((variables.thumb_height / 2) - (locvar.img_input["height"] / 2)) />
-						<cfset result['imgStr'] = '<img src="#locvar.baseRelPath##arguments.fileName#" border="0" width="#locvar.img_input["width"]#" height="#locvar.img_input["height"]#" style="margin-top:#locvar.imgInfo.offset.y#px;margin-left:#locvar.imgInfo.offset.x#px;" />' />
+						<cfset locvar['imgInfo'] 				= StructNew() />
+						<cfset locvar.imgInfo['offset'] 		= StructNew() />
+						<cfset locvar.imgInfo.offset['x'] 		= Int((variables.thumb_width / 2) - (locvar.img_input["width"] / 2)) />
+						<cfset locvar.imgInfo.offset['y'] 		= Int((variables.thumb_height / 2) - (locvar.img_input["height"] / 2)) />
+						<cfset result['imgStr'] 				= '<img src="#locvar.baseRelPath##arguments.fileName#" border="0" width="#locvar.img_input["width"]#" height="#locvar.img_input["height"]#" style="margin-top:#locvar.imgInfo.offset.y#px;margin-left:#locvar.imgInfo.offset.x#px;" />' />
 					</cfif>
 				<cfelse>
 					<cfset result['error'] = true />
@@ -710,8 +713,8 @@
 
 			<cfelse>
 
-				<cfset locvar.baseUrl = URLDecode(arguments.baseUrl) />
-				<cfset locvar.fileExts = URLDecode(arguments.fileExts) />
+				<cfset locvar['baseUrl'] = URLDecode(arguments.baseUrl) />
+				<cfset locvar['fileExts'] = URLDecode(arguments.fileExts) />
 
 				<!--- check to see if they passed a timout value --->
 				<cfif StructKeyExists(arguments, "timeOut") and isNumeric(arguments.timeOut) and arguments.timeOut gt 0>
@@ -719,14 +722,14 @@
 				</cfif>
 
 				<!--- preload our security settings (since we have to read this in each time) --->
-				<cfset locvar.authDirs = getSecuritySettings('directories') />
-				<cfset locvar.authActions = getSecuritySettings('actions') />
-				<cfset locvar.authExts = getSecuritySettings('fileExts') />
+				<cfset locvar['authDirs'] = getSecuritySettings('directories') />
+				<cfset locvar['authActions'] = getSecuritySettings('actions') />
+				<cfset locvar['authExts'] = getSecuritySettings('fileExts') />
 				<!---
 					We can check the file size in the temp folder! Thanks Dave (aka Mister Dai)
 					http://misterdai.wordpress.com/2010/02/26/upload-size-before-cffile-upload/
 				--->
-				<cfset locvar.fileSize = GetFileInfo(GetTempDirectory() & GetFileFromPath(arguments.fileUploadField)) />
+				<cfset locvar['fileSize'] = GetFileInfo(GetTempDirectory() & GetFileFromPath(arguments.fileUploadField)) />
 
 				<!--- validate "navigateDirectory" action and path --->
 				<cfif NOT isPathValid(locvar.baseUrl,false,locvar.authDirs)>
@@ -767,7 +770,7 @@
 						<cfset ArrayAppend(result.msg, "Variable FILEEXTS not defined or invalid data.") />
 					<cfelse>
 						<!--- remove any spaced between the list items ", " or " ," --->
-						<cfset locvar.fileExts = ReReplace(locvar.fileExts, "[\s]*,[\s]*",",","ALL") />
+						<cfset locvar['fileExts'] = ReReplace(locvar.fileExts, "[\s]*,[\s]*",",","ALL") />
 					</cfif>
 					<cfif NOT isNumeric(arguments.maxSize) or (isNumeric(arguments.maxSize) and (arguments.maxSize lt 1 or arguments.maxSize gt 9999999))>
 						<cfset result['error'] = true />
@@ -806,21 +809,21 @@
 								<!---
 									check file name and move out of temp directory
 								—————————————————————————————————————————————————————————————————————————————————————— --->
-								<cfset locvar.newFileName = safeFileNameFull(cffile.serverFileName) & "." & LCase(cffile.serverFileExt) />
-								<cfset locvar.serverFilePath = Replace(cffile.ServerDirectory, '\', '/', 'ALL') & "/" & cffile.ServerFile />
-								<cfset locvar.newFilePath = ExpandPath(Replace(locvar.baseUrl, '\', '/', 'ALL') & locvar.newFileName) />
+								<cfset locvar['newFileName'] = safeFileNameFull(cffile.serverFileName) & "." & LCase(cffile.serverFileExt) />
+								<cfset locvar['serverFilePath'] = Replace(cffile.ServerDirectory, '\', '/', 'ALL') & "/" & cffile.ServerFile />
+								<cfset locvar['newFilePath'] = ExpandPath(Replace(locvar.baseUrl, '\', '/', 'ALL') & locvar.newFileName) />
 
 								<!---
 								 | CHECK TO SEE IF THE WAS AN IMAGE BEFORE WE SCALE IT
 								 | *using isImageFile() might crash, but only if CF8 is missing an update it could crash the server.
 								--->
 								<cfif server.coldfusion.productname eq "Railo" or ListGetAt(server.coldfusion.productversion, 1) gt 8>
-									<cfset locvar.isImg = isImageFile(ExpandPath('#locvar.serverFilePath#')) />
+									<cfset locvar['isImg'] = isImageFile(ExpandPath('#locvar.serverFilePath#')) />
 								<cfelse>
 									<cfif ListFindNoCase(variables.webImgFileList, LCase(cffile.serverFileExt)) gt 0>
-										<cfset locvar.isImg = true />
+										<cfset locvar['isImg'] = true />
 									<cfelse>
-										<cfset locvar.isImg = false />
+										<cfset locvar['isImg'] = false />
 									</cfif>
 								</cfif>
 
@@ -831,7 +834,7 @@
 									<cfimage action="read" name="locvar.imgFile" source="#locvar.newFilePath#" />
 									<cfif locvar.imgFile["width"] gt arguments.maxWidth or locvar.imgFile["height"] gt arguments.maxHeight>
 										<cfset ImageSetAntialiasing(locvar.imgFile, "on") />
-										<cfset locvar.imgInfo = calcScaleInfo(locvar.imgFile["width"], locvar.imgFile["height"], arguments.maxWidth, arguments.maxHeight, "fit") />
+										<cfset locvar['imgInfo'] = calcScaleInfo(locvar.imgFile["width"], locvar.imgFile["height"], arguments.maxWidth, arguments.maxHeight, "fit") />
 										<cfset ImageScaleToFit(locvar.imgFile, locvar.imgInfo.width, locvar.imgInfo.height, "highestQuality", "1") />
 										<cfimage action="write" source="#locvar.imgFile#" destination="#locvar.newFilePath#" overwrite="yes" />
 									</cfif>
@@ -892,7 +895,7 @@
 				</html>
 			</cfoutput>
 		</cfsavecontent>
-		<cfset locvar.binResponse = ToBinary( ToBase64( locvar.strHTML ) ) />
+		<cfset locvar['binResponse'] = ToBinary( ToBase64( locvar.strHTML ) ) />
 		<cfcontent reset="true" /><cfheader name="content-length" value="#ArrayLen( locvar.binResponse )#" /><cfcontent type="text/html" variable="#locvar.binResponse#" />
 	</cffunction>
 
@@ -917,7 +920,7 @@
 
 			<cftry>
 
-				<cfset locvar.requestData = GetHttpRequestData() />
+				<cfset locvar['requestData'] = GetHttpRequestData() />
 				<cfset cj.origFilename = LCase(URLDecode(cgi.http_x_file_name)) />
 
 				<cfset cj.nameArr = ListToArray(cj.origFilename, ".") />
@@ -966,9 +969,9 @@
 						</cfif>
 
 						<!--- preload our security settings (since we have to read this in each time) --->
-						<cfset locvar.authDirs = getSecuritySettings('directories') />
-						<cfset locvar.authActions = getSecuritySettings('actions') />
-						<cfset locvar.authExts = getSecuritySettings('fileExts') />
+						<cfset locvar['authDirs'] = getSecuritySettings('directories') />
+						<cfset locvar['authActions'] = getSecuritySettings('actions') />
+						<cfset locvar['authExts'] = getSecuritySettings('fileExts') />
 
 						<!--- validate "navigateDirectory" action and path --->
 						<cfif NOT isPathValid(cj.baseRelPath, false, locvar.authDirs)>
@@ -999,43 +1002,43 @@
 
 							<!--- validate that we have the proper form fields --->
 							<cfif NOT DirectoryExists(ExpandPath(cj.baseRelPath))>
-								<cfset result.error = true />
+								<cfset result['error'] = true />
 								<cfset ArrayAppend(result.msg, "You must provide a valid UPLOAD DIRECTORY.<br /><small>(Could not find directory)</small>")>
 							</cfif>
 							<cfif Len(cj.baseRelPath) eq 0 or ReFind("[^a-zA-Z0-9\,\$\-\_\.\+\!\*\'\(\)\/]+", cj.baseRelPath) gt 0>
-								<cfset result.error = true />
+								<cfset result['error'] = true />
 								<cfset ArrayAppend(result.msg, "Variable BASEURL not defined or invalid data.") />
 							</cfif>
 							<cfif cj.params.fileExts neq "*" and ReFind("[^a-zA-Z0-9\,]+", URLDecode(cj.params.fileExts)) gt 0>
-								<cfset result.error = true />
+								<cfset result['error'] = true />
 								<cfset ArrayAppend(result.msg, "Variable FILEEXTS not defined or invalid data.") />
 							<cfelse>
 								<!--- remove any spaced between the list items ", " or " ," --->
 								<cfset cj.params.fileExts = ReReplace(URLDecode(cj.params.fileExts), "[\s]*,[\s]*",",","ALL") />
 							</cfif>
 							<cfif NOT isNumeric(cj.params.maxSize) or (isNumeric(cj.params.maxSize) and (cj.params.maxSize lt 1 or cj.params.maxSize gt 9999999))>
-								<cfset result.error = true />
+								<cfset result['error'] = true />
 								<cfset ArrayAppend(result.msg, "Variable MAXSIZE not defined or invalid data.") />
 							</cfif>
 							<cfif NOT isNumeric(cj.params.maxWidth) or (isNumeric(cj.params.maxWidth) and (cj.params.maxWidth lt 1 or cj.params.maxSize gt 9999999))>
-								<cfset result.error = true />
+								<cfset result['error'] = true />
 								<cfset ArrayAppend(result.msg, "Variable MAXWIDTH not defined or invalid data.") />
 							</cfif>
 							<cfif NOT isNumeric(cj.params.maxHeight) or (isNumeric(cj.params.maxHeight) and (cj.params.maxHeight lt 1 or cj.params.maxHeight gt 9999999))>
-								<cfset result.error = true />
+								<cfset result['error'] = true />
 								<cfset ArrayAppend(result.msg, "Variable MAXHEIGHT not defined or invalid data.") />
 							</cfif>
 
-							<cfif NOT result['error'] and ArrayLen(result['msg']) eq 0>
+							<cfif NOT result.error and ArrayLen(result.msg) eq 0>
 
 								<!--- we're all good in the hood, since cffile write doesn't make unqiue file names, loop through until we can write one --->
-								<cfset locvar.tempFileName = cj.fileName & "." & cj.fileExt />
+								<cfset locvar['tempFileName'] = cj.fileName & "." & cj.fileExt />
 								<cfloop index="locvar.idx" from="1" to="999">
 									<cfif NOT FileExists(ExpandPath('#cj.baseRelPath##locvar.tempFileName#'))>
 										<cffile action="write" file="#ExpandPath('#cj.baseRelPath##locvar.tempFileName#')#" output="#locvar.requestData.content#" />
 										<cfbreak />
 									<cfelse>
-										<cfset locvar.tempFileName = cj.fileName & locvar.idx & "." & cj.fileExt />
+										<cfset locvar['tempFileName'] = cj.fileName & locvar.idx & "." & cj.fileExt />
 									</cfif>
 								</cfloop>
 								<cfset sleep(25) >
@@ -1045,12 +1048,12 @@
 								 | *using isImageFile() might crash, but only if CF8 is missing an update it could crash the server.
 								--->
 								<cfif server.coldfusion.productname eq "Railo" or ListGetAt(server.coldfusion.productversion, 1) gt 8>
-									<cfset locvar.isImg = isImageFile(ExpandPath('#cj.baseRelPath##locvar.tempFileName#')) />
+									<cfset locvar['isImg'] = isImageFile(ExpandPath('#cj.baseRelPath##locvar.tempFileName#')) />
 								<cfelse>
 									<cfif ListFindNoCase(variables.webImgFileList, cj.fileExt) gt 0>
-										<cfset locvar.isImg = true />
+										<cfset locvar['isImg'] = true />
 									<cfelse>
-										<cfset locvar.isImg = false />
+										<cfset locvar['isImg'] = false />
 									</cfif>
 								</cfif>
 								<cfif locvar.isImg and isNumeric(cj.params.maxWidth) and isNumeric(cj.params.maxHeight)>
@@ -1058,7 +1061,7 @@
 									<cfimage action="read" name="locvar.imgFile" source="#ExpandPath('#cj.baseRelPath##locvar.tempFileName#')#" />
 									<cfif locvar.imgFile["width"] gt cj.params.maxWidth or locvar.imgFile["height"] gt cj.params.maxHeight>
 										<cfset ImageSetAntialiasing(locvar.imgFile, "on") />
-										<cfset locvar.imgInfo = calcScaleInfo(locvar.imgFile["width"], locvar.imgFile["height"], cj.params.maxWidth, cj.params.maxHeight, "fit") />
+										<cfset locvar['imgInfo'] = calcScaleInfo(locvar.imgFile["width"], locvar.imgFile["height"], cj.params.maxWidth, cj.params.maxHeight, "fit") />
 										<cfset ImageScaleToFit(locvar.imgFile, locvar.imgInfo.width, locvar.imgInfo.height, "highestQuality", "1") />
 										<cfimage action="write" source="#locvar.imgFile#" destination="#ExpandPath('#cj.baseRelPath##locvar.tempFileName#')#" overwrite="yes" />
 									</cfif>
@@ -1115,8 +1118,8 @@
 			</cfif>
 
 			<!--- preload our security settings (since we have to read this in each time) --->
-			<cfset locvar.authDirs = getSecuritySettings('directories') />
-			<cfset locvar.authActions = getSecuritySettings('actions') />
+			<cfset locvar['authDirs'] = getSecuritySettings('directories') />
+			<cfset locvar['authActions'] = getSecuritySettings('actions') />
 
 			<!--- validate "navigateDirectory" action and path --->
 			<cfif NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
@@ -1180,8 +1183,8 @@
 			</cfif>
 
 			<!--- preload our security settings (since we have to read this in each time) --->
-			<cfset locvar.authDirs = getSecuritySettings('directories') />
-			<cfset locvar.authActions = getSecuritySettings('actions') />
+			<cfset locvar['authDirs'] = getSecuritySettings('directories') />
+			<cfset locvar['authActions'] = getSecuritySettings('actions') />
 
 			<!--- validate "navigateDirectory" action and path --->
 			<cfif NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
@@ -1251,8 +1254,8 @@
 			</cfif>
 
 			<!--- preload our security settings (since we have to read this in each time) --->
-			<cfset locvar.authDirs = getSecuritySettings('directories') />
-			<cfset locvar.authActions = getSecuritySettings('actions') />
+			<cfset locvar['authDirs'] = getSecuritySettings('directories') />
+			<cfset locvar['authActions'] = getSecuritySettings('actions') />
 
 			<!--- validate "navigateDirectory" action and path --->
 			<cfif NOT isPathValid(locvar.baseRelPath, false, locvar.authDirs)>
@@ -1472,37 +1475,37 @@
 	<cffunction name="safeFileNameFull" returntype="string" output="yes" hint="Searches a string for common words and illegal filename characters and strips and returns it.">
 		<cfargument name="input" type="string" required="yes" />
 			<cfset var locvar = StructNew() />
-			<cfset locvar.output = "" />
+			<cfset locvar['output'] = "" />
 			<cftry>
 				<cfif Len(arguments.input) gt 0>
-					<cfset locvar.pos = ReFind("\.([^\.]+)$", arguments.input) />
+					<cfset locvar['pos'] = ReFind("\.([^\.]+)$", arguments.input) />
 					<cfif locvar.pos lte 0>
 						<!--- there is no file extension --->
-						<cfset locvar.name = LCase(arguments.input) />
-						<cfset locvar.ext = "" />
+						<cfset locvar['name'] = LCase(arguments.input) />
+						<cfset locvar['ext'] = "" />
 					<cfelse>
 						<cfif locvar.pos gt 1>
-							<cfset locvar.name = LCase(Left(arguments.input, locvar.pos - 1)) />
+							<cfset locvar['name'] = LCase(Left(arguments.input, locvar.pos - 1)) />
 						<cfelse>
 							<!--- no name, just an extension? --->
-							<cfset locvar.name = "" />
+							<cfset locvar['name'] = "" />
 						</cfif>
 						<cfif locvar.pos lt Len(arguments.input)>
-							<cfset locvar.ext = LCase(Mid(arguments.input, locvar.pos + 1, Len(arguments.input))) />
+							<cfset locvar['ext'] = LCase(Mid(arguments.input, locvar.pos + 1, Len(arguments.input))) />
 						<cfelse>
 							<!--- no extension, just an name? --->
-							<cfset locvar.ext = "" />
+							<cfset locvar['ext'] = "" />
 						</cfif>
 					</cfif>
-					<cfset locvar.output = REReplaceNoCase(locvar.name, '[^a-zA-Z0-9_\-]+', '_', 'ALL') />
-					<cfset locvar.output = REReplaceNoCase(locvar.output, '[_]+', '_', 'ALL') />
-					<cfset locvar.output = REReplaceNoCase(locvar.output, '\b((and)|(or)|(at))\b', '', 'ALL') />
+					<cfset locvar['output'] = REReplaceNoCase(locvar.name, '[^a-zA-Z0-9_\-]+', '_', 'ALL') />
+					<cfset locvar['output'] = REReplaceNoCase(locvar.output, '[_]+', '_', 'ALL') />
+					<cfset locvar['output'] = REReplaceNoCase(locvar.output, '\b((and)|(or)|(at))\b', '', 'ALL') />
 					<cfif Len(locvar.output) gt 0 and Len(locvar.ext) gt 0>
-						<cfset locvar.output = locvar.output & "." & locvar.ext />
+						<cfset locvar['output'] = locvar.output & "." & locvar.ext />
 					<cfelseif Len(locvar.output) gt 0>
-						<cfset locvar.output = locvar.output />
+						<cfset locvar['output'] = locvar.output />
 					<cfelseif Len(locvar.ext) gt 0>
-						<cfset locvar.output = locvar.ext />
+						<cfset locvar['output'] = locvar.ext />
 					</cfif>
 				</cfif>
 			<cfcatch type="any">
