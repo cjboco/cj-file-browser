@@ -23,6 +23,7 @@
 			*Relative from ROOT (Don't use "../" not sure that will work)
 		********************************************** -->
 		<directoriesAllowed>
+			<!--- trying to automatically determine root. This may not work for your installation --->
 			<cfif FileExists(ExpandPath('../../../../Application.cfc'))>
 				<cfset base_url = "/#GetDirectoryFromPath(ExpandPath('../../../../Application.cfc'))#" />
 				<cfset base_url = ReplaceNoCase(base_url, ExpandPath('/'), '', 'ALL') />
